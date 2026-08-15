@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>童軍永備尺與估測測驗系統 (標準12項版)</title>
+    <title>童軍永備尺與估測測驗系統 (實境抽籤版)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { color: #2c5e1a; text-align: center; border-bottom: 2px solid #2c5e1a; padding-bottom: 10px; }
         h2 { color: #387c2b; }
         
-        /* 頁籤設計 */
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
         .tab { padding: 10px 15px; cursor: pointer; background: #eee; border: 1px solid #ddd; border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; margin-bottom: -1px; }
         .tab.active { background: #2c5e1a; color: white; border-color: #2c5e1a; font-weight: bold; }
@@ -18,23 +17,22 @@
         .content { display: none; padding: 20px; border: 1px solid #ddd; border-radius: 0 5px 5px 5px; background: #fafafa; }
         .content.active { display: block; }
         
-        /* 表單網格排版 (兩欄或三欄) */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .form-group { background: #fff; padding: 10px; border: 1px solid #e1e1e1; border-radius: 5px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #444; }
         input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         
-        button { background: #2c5e1a; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; width: 100%; transition: background 0.3s; }
+        button { background: #2c5e1a; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; width: 100%; transition: background 0.3s; font-weight: bold; }
         button:hover { background: #1a4010; }
-        .action-btn { background: #0056b3; width: auto; margin-bottom: 15px; }
-        .action-btn:hover { background: #004494; }
+        .action-btn { background: #e67e22; width: auto; margin-bottom: 15px; font-size: 18px; }
+        .action-btn:hover { background: #d35400; }
         
         .result { margin-top: 15px; padding: 15px; border-radius: 4px; font-weight: bold; display: none; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .question-box { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 15px; font-size: 18px; border-left: 5px solid #0056b3; }
+        .question-box { background: #fff3cd; padding: 20px; border-radius: 5px; margin-bottom: 15px; font-size: 18px; border-left: 6px solid #ffc107; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .draw-title { color: #d35400; margin-top: 0; margin-bottom: 10px; font-size: 20px; border-bottom: 1px dashed #f5c6cb; padding-bottom: 5px; }
         
-        /* 目前數值狀態面板 */
         .info-panel { background: #e2eef7; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #b8daff; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; font-size: 14px; }
         .info-item { background: #fff; padding: 5px 10px; border-radius: 4px; border: 1px solid #cce5ff; }
@@ -44,40 +42,39 @@
 <body>
 
 <div class="container">
-    <h1>⛺ 童軍永備尺與估測測驗系統</h1>
+    <h1>⛺ 童軍永備尺與估測測驗 (實境抽籤版)</h1>
     
     <div class="info-panel" id="current-measures">
-        <strong>🔍 你的專屬永備尺 (單位：公尺 m)</strong> 
+        <strong>🔍 你的專屬永備尺 (系統自動換算為公尺 m)</strong> 
         <div class="info-grid" id="info-grid">
-            <!-- 動態生成數值顯示 -->
             <div class="info-item">尚未設定資料</div>
         </div>
     </div>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab(event, 'calibration')">1. 永備尺校準 (標準12項)</div>
-        <div class="tab" onclick="switchTab(event, 'area-test')">2. 面積測驗</div>
-        <div class="tab" onclick="switchTab(event, 'volume-test')">3. 體積測驗</div>
-        <div class="tab" onclick="switchTab(event, 'height-test')">4. 高度測驗</div>
+        <div class="tab active" onclick="switchTab(event, 'calibration')">1. 永備尺校準</div>
+        <div class="tab" onclick="switchTab(event, 'area-test')">2. 面積抽籤</div>
+        <div class="tab" onclick="switchTab(event, 'volume-test')">3. 體(容)積抽籤</div>
+        <div class="tab" onclick="switchTab(event, 'height-test')">4. 高度抽籤</div>
     </div>
 
     <!-- 1. 永備尺校準 -->
     <div id="calibration" class="content active">
         <h2>📏 建立你的專屬永備尺</h2>
-        <p>請輸入實際測量數值（單位：<b>公分 cm</b>）。系統會自動換算為公尺 (m) 供測驗使用。若某些項目尚未測量，可先留白(預設0)。</p>
+        <p>請輸入測量數值（單位：<b>公分 cm</b>）。為求抽籤測驗順利進行，建議至少填寫<b>手跨長(或拳頭長)、兩手長、步長、自選1(眼高)</b>。</p>
         
         <div class="form-grid">
             <div class="form-group"><label>1. 身高</label><input type="number" id="m_height" placeholder="cm"></div>
             <div class="form-group"><label>2. 一手高舉長</label><input type="number" id="m_upReach" placeholder="cm"></div>
             <div class="form-group"><label>3. 手長</label><input type="number" id="m_arm" placeholder="cm"></div>
-            <div class="form-group"><label>4. 兩手長 (庹長)</label><input type="number" id="m_armSpan" placeholder="cm"></div>
-            <div class="form-group"><label>5. 手跨長 (指距)</label><input type="number" id="m_handSpan" placeholder="cm"></div>
+            <div class="form-group"><label>4. 兩手長</label><input type="number" id="m_armSpan" placeholder="cm"></div>
+            <div class="form-group"><label>5. 手跨長</label><input type="number" id="m_handSpan" placeholder="cm"></div>
             <div class="form-group"><label>6. 拳頭長</label><input type="number" id="m_fist" placeholder="cm"></div>
             <div class="form-group"><label>7. 食指首節長</label><input type="number" id="m_indexFinger" placeholder="cm"></div>
             <div class="form-group"><label>8. 腳長</label><input type="number" id="m_foot" placeholder="cm"></div>
             <div class="form-group"><label>9. 步長</label><input type="number" id="m_pace" placeholder="cm"></div>
             <div class="form-group"><label>10. 跑步長</label><input type="number" id="m_runPace" placeholder="cm"></div>
-            <div class="form-group" style="background:#e8f4e5;"><label>11. 其他自選1 (建議:眼睛高度)</label><input type="number" id="m_custom1" placeholder="cm (測樹高用)"></div>
+            <div class="form-group"><label>11. 其他自選1 (建議測眼高)</label><input type="number" id="m_custom1" placeholder="cm (測高用)"></div>
             <div class="form-group"><label>12. 其他自選2</label><input type="number" id="m_custom2" placeholder="cm"></div>
         </div>
         
@@ -87,14 +84,14 @@
 
     <!-- 2. 面積估測測驗 -->
     <div id="area-test" class="content">
-        <h2>🏕️ 面積估測挑戰</h2>
-        <p>利用你設定的「步長」來計算營地面積。</p>
-        <button class="action-btn" onclick="generateAreaQuestion()">產生新題目</button>
+        <h2>🏕️ 面積測驗：關主抽籤</h2>
+        <p>模擬抽籤決定現場測量物件，考驗你對永備尺的靈活運用。</p>
+        <button class="action-btn" onclick="generateAreaQuestion()">🎲 抽出測量物件</button>
         
         <div id="area-q-container" style="display:none;">
             <div class="question-box" id="area-question"></div>
             <div class="form-group">
-                <label>面積是幾「平方公尺」(m²)？ (請四捨五入到小數點後第一位)</label>
+                <label>請計算面積為幾「平方公尺」(m²)？ (請四捨五入到小數點後第一位)</label>
                 <input type="number" id="area-answer" step="0.1">
             </div>
             <button onclick="checkAreaAnswer()">送出答案</button>
@@ -102,16 +99,16 @@
         </div>
     </div>
 
-    <!-- 3. 體積估測測驗 -->
+    <!-- 3. 體(容)積估測測驗 -->
     <div id="volume-test" class="content">
-        <h2>📦 體積估測挑戰</h2>
-        <p>利用你的「手跨長」來計算木箱體積。</p>
-        <button class="action-btn" onclick="generateVolumeQuestion()">產生新題目</button>
+        <h2>📦 體積與容積測驗：關主抽籤</h2>
+        <p>可能會抽到洗手槽、布偶或箱子等不同物件。</p>
+        <button class="action-btn" onclick="generateVolumeQuestion()">🎲 抽出測量物件</button>
         
         <div id="vol-q-container" style="display:none;">
             <div class="question-box" id="vol-question"></div>
             <div class="form-group">
-                <label>體積是幾「立方公尺」(m³)？ (請四捨五入到小數點後第三位)</label>
+                <label>請計算體(容)積為幾「立方公尺」(m³)？ (請四捨五入到小數點後第三位)</label>
                 <input type="number" id="vol-answer" step="0.001">
             </div>
             <button onclick="checkVolAnswer()">送出答案</button>
@@ -121,9 +118,9 @@
 
     <!-- 4. 高度估測測驗 -->
     <div id="height-test" class="content">
-        <h2>🌲 高度估測挑戰 (相似三角形)</h2>
-        <p>結合你的「步長」與「其他自選1 (眼睛高度)」來計算。</p>
-        <button class="action-btn" onclick="generateHeightQuestion()">產生新題目</button>
+        <h2>🌲 高度測驗：關主抽籤</h2>
+        <p>可能抽到樹木、旗桿或建築物。</p>
+        <button class="action-btn" onclick="generateHeightQuestion()">🎲 抽出測量物件</button>
         
         <div id="height-q-container" style="display:none;">
             <div class="question-box" id="height-question"></div>
@@ -139,60 +136,54 @@
 </div>
 
 <script>
-    // 儲存 12 項標準永備尺 (內部轉換為公尺)
-    let measures = {
-        height: 0, upReach: 0, arm: 0, armSpan: 0, 
-        handSpan: 0, fist: 0, indexFinger: 0, foot: 0, 
-        pace: 0, runPace: 0, custom1: 0, custom2: 0
-    };
-    
-    // 對應的中文名稱
-    const measureNames = {
-        height: "身高", upReach: "一手高舉長", arm: "手長", armSpan: "兩手長", 
-        handSpan: "手跨長", fist: "拳頭長", indexFinger: "食指首節長", foot: "腳長", 
-        pace: "步長", runPace: "跑步長", custom1: "自選1(眼高)", custom2: "自選2"
-    };
+    let measures = { height: 0, upReach: 0, arm: 0, armSpan: 0, handSpan: 0, fist: 0, indexFinger: 0, foot: 0, pace: 0, runPace: 0, custom1: 0, custom2: 0 };
+    const measureNames = { height: "身高", upReach: "一手高舉長", arm: "手長", armSpan: "兩手長", handSpan: "手跨長", fist: "拳頭長", indexFinger: "食指首節長", foot: "腳長", pace: "步長", runPace: "跑步長", custom1: "自選1(眼高)", custom2: "自選2" };
 
-    let currentAreaAns = 0;
-    let currentVolAns = 0;
-    let currentHeightAns = 0;
-    let currentHeightMethod = "";
+    // 抽籤物件庫設計：依照物品大小分類，指定適合的工具清單
+    const areaObjects = [
+        { name: "洗手間外牆面", tools: ['armSpan', 'arm', 'pace'] },
+        { name: "木製野餐桌桌面", tools: ['handSpan', 'arm', 'fist'] },
+        { name: "公佈欄", tools: ['handSpan', 'arm', 'armSpan'] },
+        { name: "帳篷底布", tools: ['foot', 'pace', 'armSpan'] },
+        { name: "半個籃球場", tools: ['pace', 'runPace'] }
+    ];
 
-    // 頁籤切換
+    const volumeObjects = [
+        { name: "營區洗手槽", tools: ['handSpan', 'fist', 'arm'], type: "容積" },
+        { name: "大型吉祥物布偶", tools: ['handSpan', 'fist', 'arm'], type: "佔用體積" },
+        { name: "裝備塑膠箱", tools: ['handSpan', 'arm', 'foot'], type: "體積" },
+        { name: "營區大垃圾桶", tools: ['handSpan', 'arm', 'armSpan'], type: "容積" },
+        { name: "大型保鮮冷藏冰桶", tools: ['handSpan', 'fist', 'arm'], type: "容積" }
+    ];
+
+    const heightObjects = ["升旗台旗桿", "營區大樹", "路燈", "籃球架", "營本部建築"];
+
+    let currentAreaAns = 0; let currentVolAns = 0; let currentHeightAns = 0; let currentHeightMethod = ""; let currentToolData = {};
+
     function switchTab(evt, tabName) {
         let content = document.getElementsByClassName("content");
         for (let i = 0; i < content.length; i++) content[i].classList.remove("active");
-        
         let tabs = document.getElementsByClassName("tab");
         for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-        
         document.getElementById(tabName).classList.add("active");
         evt.currentTarget.classList.add("active");
     }
 
-    // 儲存永備尺
     function saveMeasures() {
         let hasData = false;
         for (let key in measures) {
             let val = parseFloat(document.getElementById('m_' + key).value);
-            measures[key] = (isNaN(val) ? 0 : val) / 100; // cm 轉 m
+            measures[key] = (isNaN(val) ? 0 : val) / 100;
             if(val > 0) hasData = true;
         }
-
-        if(!hasData) {
-            alert("請至少輸入一項資料！");
-            return;
-        }
-
+        if(!hasData) return alert("請至少輸入一項資料！");
         updateInfoPanel();
-
         let msg = document.getElementById('calib-msg');
-        msg.innerText = "✅ 設定成功！已轉換為公尺 (m)，請切換至上方頁籤進行測驗。";
+        msg.innerText = "✅ 儲存成功！資料已鎖定並轉為公尺(m)。請至後方頁籤進行抽籤。";
         msg.style.display = "block";
         msg.className = "result success";
     }
 
-    // 更新上方狀態面板
     function updateInfoPanel() {
         let html = '';
         for (let key in measures) {
@@ -202,32 +193,42 @@
         document.getElementById('info-grid').innerHTML = html;
     }
 
-    // 檢查特定數值是否有設定
-    function checkSetup(requiredKeys) {
-        let missing = [];
-        requiredKeys.forEach(key => {
-            if(measures[key] === 0) missing.push(measureNames[key]);
-        });
+    // 核心邏輯：自動從使用者的設定中，尋找該物件適合的測量工具
+    function getBestTool(preferredTools) {
+        // 優先找推薦工具
+        let available = preferredTools.filter(t => measures[t] > 0);
+        if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
         
-        if(missing.length > 0) {
-            alert(`此測驗需要以下永備尺資料，請先至「永備尺校準」填寫：\n\n👉 ${missing.join('、')}`);
-            return false;
-        }
-        return true;
+        // 若推薦工具都沒填，硬抓使用者有填寫的任何長度工具 (排除身高與自選)
+        let anyAvailable = Object.keys(measures).filter(k => measures[k] > 0 && !['height', 'custom1', 'custom2'].includes(k));
+        if (anyAvailable.length > 0) return anyAvailable[Math.floor(Math.random() * anyAvailable.length)];
+        return null;
     }
 
     // --- 面積測驗 ---
     function generateAreaQuestion() {
-        if(!checkSetup(['pace'])) return;
+        let obj = areaObjects[Math.floor(Math.random() * areaObjects.length)];
+        let toolKey = getBestTool(obj.tools);
+        if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫手跨長或步長)");
         
-        let lengthPaces = Math.floor(Math.random() * 21) + 10;
-        let widthPaces = Math.floor(Math.random() * 21) + 10;
+        let toolName = measureNames[toolKey];
+        let toolVal = measures[toolKey];
         
-        document.getElementById('area-question').innerHTML = `你正在測量紮營地。沿長邊走了 <b>${lengthPaces} 步</b>，寬邊走了 <b>${widthPaces} 步</b>。請問面積約多少平方公尺？`;
-        
-        let actualArea = (lengthPaces * measures.pace) * (widthPaces * measures.pace);
-        currentAreaAns = Math.round(actualArea * 10) / 10; 
+        // 依照工具長短，動態給予合理的倍數範圍
+        let maxMulti = toolVal < 0.5 ? 15 : (toolVal < 1 ? 10 : 6);
+        let lCount = Math.floor(Math.random() * maxMulti) + 3;
+        let wCount = Math.floor(Math.random() * maxMulti) + 2;
 
+        document.getElementById('area-question').innerHTML = `
+            <h3 class="draw-title">🎲 你抽到的測量物件：【${obj.name}】</h3>
+            你決定使用你的 <b>「${toolName}」</b> 進行測量。<br>
+            實測結果：長邊總共是 <b>${lCount} 個 ${toolName}</b>，寬邊總共是 <b>${wCount} 個 ${toolName}</b>。
+        `;
+        
+        let actualArea = (lCount * toolVal) * (wCount * toolVal);
+        currentAreaAns = Math.round(actualArea * 10) / 10; 
+        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount};
+        
         document.getElementById('area-q-container').style.display = "block";
         document.getElementById('area-msg').style.display = "none";
         document.getElementById('area-answer').value = "";
@@ -237,30 +238,40 @@
         let userAns = parseFloat(document.getElementById('area-answer').value);
         let msg = document.getElementById('area-msg');
         msg.style.display = "block";
-
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
-
+        
         if(Math.abs(userAns - currentAreaAns) <= 0.2) {
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentAreaAns}</b> m²。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(長步數 × 步長) × (寬步數 × 步長) = (${measures.pace} × ...) × (${measures.pace} × ...)`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(${currentToolData.l} × ${currentToolData.val}m) × (${currentToolData.w} × ${currentToolData.val}m)`;
             msg.className = "result error";
         }
     }
 
-    // --- 體積測驗 ---
+    // --- 體(容)積測驗 ---
     function generateVolumeQuestion() {
-        if(!checkSetup(['handSpan'])) return;
+        let obj = volumeObjects[Math.floor(Math.random() * volumeObjects.length)];
+        let toolKey = getBestTool(obj.tools);
+        if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫拳頭長或手跨長)");
         
-        let lSpan = Math.floor(Math.random() * 7) + 2;
-        let wSpan = Math.floor(Math.random() * 7) + 2;
-        let hSpan = Math.floor(Math.random() * 7) + 2;
+        let toolName = measureNames[toolKey];
+        let toolVal = measures[toolKey];
         
-        document.getElementById('vol-question').innerHTML = `計算童軍木箱體積。長 <b>${lSpan} 個手跨長</b>，寬 <b>${wSpan} 個手跨長</b>，高 <b>${hSpan} 個手跨長</b>。請問體積約多少立方公尺？`;
+        let maxMulti = toolVal < 0.2 ? 10 : 5;
+        let lCount = Math.floor(Math.random() * maxMulti) + 2;
+        let wCount = Math.floor(Math.random() * maxMulti) + 2;
+        let hCount = Math.floor(Math.random() * maxMulti) + 2;
+
+        document.getElementById('vol-question').innerHTML = `
+            <h3 class="draw-title">🎲 你抽到的測量物件：【${obj.name}】</h3>
+            考官請你估測它的<b>${obj.type}</b>。你使用 <b>「${toolName}」</b> 進行測量。<br>
+            實測結果：長度是 <b>${lCount} 個</b>，寬度是 <b>${wCount} 個</b>，深度/高度是 <b>${hCount} 個</b>。
+        `;
         
-        let actualVol = (lSpan * measures.handSpan) * (wSpan * measures.handSpan) * (hSpan * measures.handSpan);
+        let actualVol = (lCount * toolVal) * (wCount * toolVal) * (hCount * toolVal);
         currentVolAns = Math.round(actualVol * 1000) / 1000; 
+        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount, h: hCount};
 
         document.getElementById('vol-q-container').style.display = "block";
         document.getElementById('vol-msg').style.display = "none";
@@ -271,35 +282,36 @@
         let userAns = parseFloat(document.getElementById('vol-answer').value);
         let msg = document.getElementById('vol-msg');
         msg.style.display = "block";
-
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
-
+        
         if(Math.abs(userAns - currentVolAns) <= 0.005) {
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentVolAns}</b> m³。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：將長、寬、高的手跨次數各自乘上你的手跨長(${measures.handSpan}m) 後再相乘。`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：將長寬高的數量各自乘上 ${currentToolData.val}m 後相乘。`;
             msg.className = "result error";
         }
     }
 
     // --- 高度測驗 ---
     function generateHeightQuestion() {
-        if(!checkSetup(['pace', 'custom1'])) return;
+        if(measures.pace === 0 || measures.custom1 === 0) {
+            return alert("高度測驗必須有「步長」與「其他自選1 (作為眼高)」，請回第一頁補充！");
+        }
         
+        let objName = heightObjects[Math.floor(Math.random() * heightObjects.length)];
         currentHeightMethod = Math.random() > 0.5 ? '45deg' : 'water';
-        
-        let qText = "";
+        let qText = `<h3 class="draw-title">🎲 你抽到的測量物件：【${objName}】</h3>`;
         let actualHeight = 0;
 
         if (currentHeightMethod === '45deg') {
-            let paces = Math.floor(Math.random() * 20) + 10;
-            qText = `【45度仰角法/等腰直角三角形】<br>你從樹幹底部往後退，直到你以 45 度角剛好看到樹頂。你總共退了 <b>${paces} 步</b>。<br>請問這棵樹大約多高？`;
+            let paces = Math.floor(Math.random() * 20) + 5;
+            qText += `考官要求使用【等腰直角三角形法 (45度仰角)】。<br>你從目標底部往後退，直到剛好以45度角看到頂端。你退了 <b>${paces} 步 (步長)</b>。`;
             actualHeight = (paces * measures.pace) + measures.custom1;
         } else {
-            let pacesToTree = Math.floor(Math.random() * 15) + 10; 
+            let pacesToTree = Math.floor(Math.random() * 15) + 8; 
             let pacesToWater = Math.floor(Math.random() * 3) + 1;  
-            qText = `【水盆倒影法/相似三角形】<br>你在地上放一個水盆，退後直到能在水中看到旗桿頂端倒影。此時你距離水盆 <b>${pacesToWater} 步</b>，而水盆距離旗桿底部 <b>${pacesToTree} 步</b>。<br>請問旗桿大約多高？`;
+            qText += `考官要求使用【相似三角形法 (水盆倒影)】。<br>水盆距離目標底部 <b>${pacesToTree} 步 (步長)</b>，而你距離水盆 <b>${pacesToWater} 步 (步長)</b> 時能看到頂端倒影。`;
             let ratio = pacesToTree / pacesToWater;
             actualHeight = measures.custom1 * ratio;
         }
@@ -315,24 +327,19 @@
         let userAns = parseFloat(document.getElementById('height-answer').value);
         let msg = document.getElementById('height-msg');
         msg.style.display = "block";
-
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
-
+        
         if(Math.abs(userAns - currentHeightAns) <= 0.2) {
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentHeightAns}</b> m。`;
             msg.className = "result success";
         } else {
-            let hint = "";
-            if(currentHeightMethod === '45deg') {
-                hint = `算法：(退後步數 × 步長) + 眼睛高度 = (步數 × ${measures.pace}) + ${measures.custom1}`;
-            } else {
-                hint = `算法：(水盆到樹步數 ÷ 你到水盆步數) × 眼睛高度 = (比例) × ${measures.custom1}`;
-            }
+            let hint = currentHeightMethod === '45deg' 
+                ? `算法：(退後步數 × 步長 ${measures.pace}m) + 眼高 ${measures.custom1}m`
+                : `算法：(水盆到目標步數 ÷ 人到水盆步數) × 眼高 ${measures.custom1}m`;
             msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentHeightAns}</b> m。<br>${hint}`;
             msg.className = "result error";
         }
     }
 </script>
-
 </body>
 </html>
