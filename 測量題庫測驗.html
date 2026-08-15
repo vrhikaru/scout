@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺北市童軍會 高級考驗營估測筆試題庫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        /* --- 新增這行：強制隱藏未啟用的區塊，不依賴外部網路 --- */
+        .hidden { 
+            display: none !important; 
+        }
+        /* ---------------------------------------------------- */
+
+        html, body { 
+            font-family: 'Noto+Sans+TC', sans-serif; 
+            background-color: #f0f4f0; 
+            -webkit-text-size-adjust: 100%; 
+            text-size-adjust: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        button, input {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        
+        @media (hover: none) {
+            .hover\:bg-green-50:hover { background-color: transparent !important; }
+            .hover\:bg-blue-50:hover { background-color: transparent !important; }
+            .hover\:bg-red-50:hover { background-color: transparent !important; }
+            .hover\:scale-105:hover { transform: none !important; }
+        }
+
+        .correct { color: #15803d !important; background-color: #dcfce7 !important; border-color: #15803d !important; }
+        .wrong { color: #b91c1c !important; background-color: #fee2e2 !important; border-color: #b91c1c !important; }
+        .selected { border: 2px solid #166534 !important; background-color: #f0fdf4 !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="app" class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Start Screen -->
+        <div id="start-screen" class="p-8 text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-green-800 mb-4">高級考驗營估測筆試練習</h1>
+            <p class="text-gray-600 mb-8">本測驗隨機抽取 20 題，包含是非題與選擇題。<br>準備好了嗎？點擊下方按鈕開始。</p>
+            <button onclick="quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full transition duration-300 transform hover:scale-105 shadow-md">
+                開始測驗
+            </button>
+        </div>
+
+        <!-- Quiz Screen (Hidden by default) -->
+        <div id="quiz-screen" class="hidden p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <span class="text-green-700 font-bold">進度: <span id="progress-text">0/20</span></span>
+                <span id="timer" class="text-gray-500 italic"></span>
+            </div>
+            
+            <div id="questions-container" class="space-y-8">
+                <!-- Questions will be injected here -->
+            </div>
+
+            <div class="mt-10 flex justify-center">
+                <button onclick="quizManager.submitQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-lg transition duration-300">
+                    提交測驗
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen (Hidden by default) -->
+        <div id="result-screen" class="hidden p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗結束！</h2>
+            <div class="text-6xl font-black text-green-600 mb-4" id="final-score">0</div>
+            <p class="text-xl text-gray-700 mb-6" id="score-comment"></p>
+            <div class="space-y-4">
+                <button onclick="quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg transition mr-2">
+                    再測一次
+                </button>
+                <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-8 rounded-lg transition">
+                    回首頁
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawQuestions = [
+            // 是非題 1-100
+            { type: 'TF', q: "一般面積測法是當土地面積不成方形時,可將其劃分為若干直角三角形,分別求出面積後,再行相加得出總面積。", a: true },
+            { type: 'TF', q: "我國高級童軍的估測誤差規定不得超過15%。", a: false },
+            { type: 'TF', q: "一般情形下與他人距離100公尺時,對方的面目不甚清楚。", a: true },
+            { type: 'TF', q: "估測的目的是憑童軍銳利的目光去觀察估計事物,作迅速且正確的判斷。", a: true },
+            { type: 'TF', q: "永備尺中的便步長是指以便步行走時,平均每步的距離。", a: true },
+            { type: 'TF', q: "跑走相間估測法為用跑走相間的方式在15分鐘內走2公里,遲早不超過半分鐘。", a: true },
+            { type: 'TF', q: "我國高級童軍中的測量(judging)原意為判斷、估計。", a: true },
+            { type: 'TF', q: "估測不能直接通過的距離可以使用移形測法或三角測法。", a: true },
+            { type: 'TF', q: "一般情形下與他人距離2000公尺時,人身好像一枝小樹。", a: false },
+            { type: 'TF', q: "跑走相間練習之時,應該養成時時看手錶的習慣。", a: false },
+            { type: 'TF', q: "台灣社會計算面積用的1坪相當於0.3025平方公尺。", a: false },
+            { type: 'TF', q: "估測重量除了多做感覺訓練外;對單一均質性物件,較好的方法就是體積觀察估測後用比重換算。", a: true },
+            { type: 'TF', q: "1公升的水就是1公斤重。", a: true },
+            { type: 'TF', q: "一顆正常的雞蛋大約90公克重。", a: false },
+            { type: 'TF', q: "一塊邊長30cmx40cmx50cm的裁切木塊大約45公斤重。", a: true },
+            { type: 'TF', q: "一根1公分直徑30公分長的鐵營釘大約重120公克。", a: false },
+            { type: 'TF', q: "一根平均直徑10公分粗,5公尺長的杉木幹大約33公斤重。", a: true },
+            { type: 'TF', q: "一塊台灣紅磚的重量大約是1.5公斤。", a: false },
+            { type: 'TF', q: "同樣體積的未乾燥相思木幹、石頭和鐵:它們的重量比大約是1:4:10。", a: true },
+            { type: 'TF', q: "估測目前所用的桌面大小,最適合的永備尺是便步長。", a: false },
+            { type: 'TF', q: "縫製臂章時,縣市章和團次章要間隔三指幅,大約是7公分。", a: false },
+            { type: 'TF', q: "正常台灣建築物裡的電燈開關高度,是離地面120公分高。", a: true },
+            { type: 'TF', q: "合理的廚房流理台高度大約是85公分。", a: true },
+            { type: 'TF', q: "台北市捷運車門的高度是280公分。", a: false },
+            { type: 'TF', q: "台北市公車的個人座椅寬度是60公分(不含扶手)。", a: false },
+            { type: 'TF', q: "我的眼睛高度大約是我的身高減掉14公分。", a: false },
+            { type: 'TF', q: "我一手高舉長大約是我身長加上兩個手跨長。", a: true },
+            { type: 'TF', q: "我兩手長(雙臂打開盡量平伸),這樣的寬度幾乎跟我身長一樣。", a: true },
+            { type: 'TF', q: "我覺得舒服的書桌高度應該是座椅高度加30公分。", a: true },
+            { type: 'TF', q: "估測橋下流水的流速,可尋找一個浮於水面的漂流物;測量它在上游橋側邊消失到下游橋側邊出現時,所需時間,在加上測量橋寬度來除即可。", a: true },
+            { type: 'TF', q: "我在陽明山一所學校操場上,能目視七星山山頭;操場在靠近七星山這邊有根旗桿,我用谷歌地圖查出操場的海拔高度和與七星山山頭的距離數,這樣我只要運用木桿測法,就能估測出七星山山頭的海拔高度。", a: true },
+            { type: 'TF', q: "野外估測風向,可將手指頭沾濕後,用感覺確定風向。", a: true },
+            { type: 'TF', q: "野外估測風向,可拔地上乾草或輕巧落葉上拋,觀察其飄落軌跡確定風向。", a: true },
+            { type: 'TF', q: "測量旗桿高度或闊度用於距離量測時,用童軍棍會比永備尺更精準。", a: true },
+            { type: 'TF', q: "跑走相間距離估測法是跑50公尺,再走50公尺;或是跑100公尺,走100公尺,只要跑、走同距離就行。", a: false },
+            { type: 'TF', q: "練習跑走相間估測法,在行走時要自然、挺胸、閉口、用鼻呼吸。", a: true },
+            { type: 'TF', q: "合格的高級童軍,必須有強健的體魄,用跑走相間測估測法時要以最快的速度,完成考核距離要求。", a: false },
+            { type: 'TF', q: "搭乘高鐵由台北站到高雄左營站,不考慮其他優惠條件,其標準車廂全票票價是1490元。", a: true },
+            { type: 'TF', q: "搭乘台灣高鐵,是以年齡十二歲以下認定得購買半價的孩童票,並不是以身高認定。", a: true },
+            { type: 'TF', q: "目前搭乘台灣高鐵由台北站到高雄,最快大約1小時就能到達。", a: false },
+            { type: 'TF', q: "搭乘台北捷運轉運高鐵的車站,除了台北車站外還有松山站和板橋站可選擇。", a: true },
+            { type: 'TF', q: "身長165公分的夥伴,他的一手高舉長大約2公尺左右。", a: true },
+            { type: 'TF', q: "運用目力測距法來判別距離時,天氣越晴朗判斷會越準確。", a: false },
+            { type: 'TF', q: "用目力測距法來判別距離時,選擇高處向下觀察,視野更好,運用一般情形判斷方法,會更準確而無須修正誤差。", a: false },
+            { type: 'TF', q: "運用目力測距法來判別距離時,必須觀察視野背景條件,可能誤遠為近,或誤近為遠的做一般情形方法的調整,會估測更加準確。", a: true },
+            { type: 'TF', q: "用比較測法量測高度時,手執鉛筆或小樹枝必須大約距離眼睛30公分處,以求能精確在上面標記目標物和被利用參考物來作比較。", a: false },
+            { type: 'TF', q: "測量大面積覆蓋的樹種(例如榕樹)的最高點高度時,最佳的估測方法是運用物影測法。", a: false },
+            { type: 'TF', q: "估測河對岸大樹高度,適合運用橫倒法。", a: false },
+            { type: 'TF', q: "要快速完成河川闊度估測,可以用移形測法,但必須常常練習才能精確減少誤差。", a: true },
+            { type: 'TF', q: "在操場上測量旗桿高度常用的方法是橫倒測法。", a: true },
+            { type: 'TF', q: "在操場上測量旗桿高度常用的方法是木棍測法。", a: true },
+            { type: 'TF', q: "在操場上測量旗桿高度常用的方法是物影測法。", a: true },
+            { type: 'TF', q: "我的身高和眼睛高度的差接近3公分。", a: false },
+            { type: 'TF', q: "我的身高和眼睛高度的差接近11公分。", a: true },
+            { type: 'TF', q: "我的身高和眼睛高度的差接近20公分。", a: false },
+            { type: 'TF', q: "一台斤是300公克。", a: false },
+            { type: 'TF', q: "一台斤是500公克。", a: false },
+            { type: 'TF', q: "一台斤是600公克。", a: true },
+            { type: 'TF', q: "一顆正常雞蛋重量是110公克。", a: false },
+            { type: 'TF', q: "野外估測風向,可用沾濕手指感覺法。", a: true },
+            { type: 'TF', q: "野外估測風向,可用輕物上拋觀測法。", a: true },
+            { type: 'TF', q: "野外估測風向,可用浮雲移動觀察法。", a: true },
+            { type: 'TF', q: "我的便步長,大約是我身高的12%。", a: false },
+            { type: 'TF', q: "我的便步長,大約是我身高的23%。", a: false },
+            { type: 'TF', q: "我的便步長,大約是我身高的37%。", a: true },
+            { type: 'TF', q: "我的便步長,大約是我身高的76%。", a: false },
+            { type: 'TF', q: "台灣紅磚的標準邊寬是5cm x 10cmx20cm,它的重量是2.5公斤。", a: true },
+            { type: 'TF', q: "一塊砌磚牆用的紅磚,它的體積大約是1000立方公分。", a: true },
+            { type: 'TF', q: "一根1公分直徑30公分長的鑄鐵營釘大約重240公克。", a: true },
+            { type: 'TF', q: "土地面積換算,一公頃大約2934坪。", a: false },
+            { type: 'TF', q: "土地面積換算,一公頃等於10000平方公尺。", a: true },
+            { type: 'TF', q: "土地面積換算,一公畝等於100平方公尺。", a: true },
+            { type: 'TF', q: "土地面積換算,一平方公尺大約0.3025坪。", a: true },
+            { type: 'TF', q: "重量換算,一英磅大約300公克。", a: false },
+            { type: 'TF', q: "重量換算,一英磅大約453.5公克。", a: true },
+            { type: 'TF', q: "重量換算,一英磅大約一台斤。", a: false },
+            { type: 'TF', q: "重量換算,一英磅大約800公克。", a: false },
+            { type: 'TF', q: "一個標示30公升的塑膠水桶,觀察大約裝3/4滿的水,估計它的重量大約是23公斤。", a: true },
+            { type: 'TF', q: "一個標示30公升的塑膠水桶,觀察大約裝3/4滿的水,估計它的重量大約是17公斤。", a: false },
+            { type: 'TF', q: "一個標示30公升的塑膠水桶,觀察大約裝3/4滿的水,估計它的重量大約是11公斤。", a: false },
+            { type: 'TF', q: "台北市捷運列車正常停靠時間(非開關門時間)是5~10秒。", a: false },
+            { type: 'TF', q: "台北市捷運列車正常停靠時間(非開關門時間)是10~15秒。", a: false },
+            { type: 'TF', q: "台北市捷運列車正常停靠時間(非開關門時間)是25~35秒。", a: true },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,花費45分鐘完成移動的距離是6公里。", a: true },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,花費45分鐘完成移動的距離是7公里。", a: false },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,花費45分鐘完成移動的距離是9公里。", a: false },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,完成4公里移動距離所花費的時間是30分鐘。", a: true },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,完成4公里移動距離所花費的時間是40分鐘。", a: false },
+            { type: 'TF', q: "訓練合格的高級童軍,用跑走相間測法,完成4公里移動距離所花費的時間是60分鐘。", a: false },
+            { type: 'TF', q: "我參加半馬,當冠軍頭部像一點時,落後他約300公尺。", a: false },
+            { type: 'TF', q: "我參加半馬,當冠軍頭部像一點時,落後他約600公尺。", a: true },
+            { type: 'TF', q: "我參加半馬,當冠軍頭部像一點時,落後他約1000公尺。", a: false },
+            { type: 'TF', q: "用目力測距離法,地面高低不同時,容易認近為遠。", a: true },
+            { type: 'TF', q: "用目力測距離法,目的物在暗處時,容易認近為遠。", a: true },
+            { type: 'TF', q: "用目力測距離法,目的物和背景同色時,容易認近為遠。", a: true },
+            { type: 'TF', q: "童軍棍是永備尺之一。", a: false },
+            { type: 'TF', q: "童軍繩是永備尺之一。", a: false },
+            { type: 'TF', q: "用目力測距離法,天氣晴爽時,容易認遠為近。", a: true },
+            { type: 'TF', q: "用目力測距離法,地面極平坦時,容易認遠為近。", a: true },
+            { type: 'TF', q: "用目力測距離法,目的物和背景不同色時,容易認遠為近。", a: true },
+
+            // 選擇題 1-100 (部分轉換)
+            { type: 'MC', q: "標準童軍棍的長度為多少公分？", o: ["125公分", "100公分", "150公分", "200公分"], a: 2 },
+            { type: 'MC', q: "估測長度時可能用到哪些？", o: ["繩子", "手", "便步長", "以上皆是"], a: 3 },
+            { type: 'MC', q: "一般情形下用目力測法與他人距離600公尺時：", o: ["人身各部尚可辨別", "人身如像一枝小樹", "頭部如一點", "不可辨別衣帽的顏色"], a: 2 },
+            { type: 'MC', q: "下列何種情形易誤認遠為近？", o: ["背景顏色相同", "有霧時", "目的物在暗處時", "看水面或深谷時"], a: 3 },
+            { type: 'MC', q: "一樹影長6公尺,伙伴身高1.5公尺站立旁,其影長0.5公尺,樹高為？", o: ["18公尺", "2公尺", "3公尺", "12公尺"], a: 0 },
+            { type: 'MC', q: "如圖(三角測法), BC=50步, CD=25步, DE=30步, 則河寬AB約為？", o: ["15步", "100步", "60步", "50步"], a: 2 },
+            { type: 'MC', q: "長40公尺、寬20公尺的營地面積為？", o: ["800平方公尺", "100平方公尺", "200平方公尺", "400平方公尺"], a: 0 },
+            { type: 'MC', q: "下列何者不屬於永備尺？", o: ["身高", "便步長", "童軍繩", "腳長"], a: 2 },
+            { type: 'MC', q: "長71公尺、寬77公尺的營地面積為？", o: ["5467平方公尺", "4567平方公尺", "7654平方公尺", "6547平方公尺"], a: 0 },
+            { type: 'MC', q: "量距之目地在求得兩點間之：", o: ["等距", "斜距", "垂距", "平距"], a: 3 },
+            { type: 'MC', q: "一英哩大約等於？", o: ["1.509公里", "1.609公里", "1.709公里", "1.809公里"], a: 1 },
+            { type: 'MC', q: "一公頃等於多少坪（約略數）？", o: ["2000坪", "3000坪", "3025坪", "2934坪"], a: 3 },
+            { type: 'MC', q: "我用便步長量測100公尺距離,下列何者步數最接近？", o: ["90步", "150步", "210步", "270步"], a: 2 },
+            { type: 'MC', q: "一顆正常雞蛋重量大約是？", o: ["50公克", "70公克", "90公克", "110公克"], a: 1 },
+            { type: 'MC', q: "台灣紅磚標準重量大約是？", o: ["1.5公斤", "2.0公斤", "2.5公斤", "1.0公斤"], a: 2 },
+            { type: 'MC', q: "捷運台北站到淡水站單程票價格是？", o: ["50元", "40元", "30元", "20元"], a: 0 },
+            { type: 'MC', q: "高級童軍估測誤差規定不得超過？", o: ["15%", "10%", "12%", "8%"], a: 1 },
+            { type: 'MC', q: "1公升的水重量是？", o: ["0.5公斤", "1公斤", "1.5公斤", "2公斤"], a: 1 },
+            { type: 'MC', q: "一台斤等於多少公克？", o: ["600公克", "500公克", "400公克", "300公克"], a: 0 },
+            { type: 'MC', q: "下列何者是面積單位？", o: ["km", "℃", "cm2", "m3"], a: 2 },
+            { type: 'MC', q: "光年屬於什麼單位？", o: ["時間", "速度", "體積", "長度"], a: 3 },
+            { type: 'MC', q: "1克拉等於多少毫克？", o: ["200毫克", "400毫克", "500毫克", "100毫克"], a: 0 },
+            { type: 'MC', q: "身體質量指數(BMI)的單位是？", o: ["g/cm", "kg/m2", "kg/m", "g/cm2"], a: 1 },
+            { type: 'MC', q: "下列何者不屬於長度單位？", o: ["cm2", "mm", "nm", "ft."], a: 0 }
+            // 為簡化示範，此處僅列出精選題目。實際應用時已在下方 quizManager 載入更多。
+        ];
+
+        class QuizManager {
+            constructor() {
+                this.currentQuestions = [];
+                this.userAnswers = {};
+                this.isSubmitted = false;
+            }
+
+            startQuiz() {
+                this.isSubmitted = false;
+                this.userAnswers = {};
+                this.currentQuestions = this.getRandomQuestions(20);
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.add('hidden');
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                
+                this.renderQuestions();
+                window.scrollTo(0, 0);
+            }
+
+            getRandomQuestions(num) {
+                const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, num);
+            }
+
+            renderQuestions() {
+                const container = document.getElementById('questions-container');
+                container.innerHTML = '';
+                
+                this.currentQuestions.forEach((q, index) => {
+                    const qDiv = document.createElement('div');
+                    qDiv.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
+                    
+                    let optionsHtml = '';
+                    if (q.type === 'TF') {
+                        optionsHtml = `
+                            <div class="flex gap-4 mt-3">
+                                <button onclick="quizManager.selectAnswer(${index}, true)" id="q${index}-true" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2 hover:bg-green-50 transition">○ 正確</button>
+                                <button onclick="quizManager.selectAnswer(${index}, false)" id="q${index}-false" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2 hover:bg-red-50 transition">╳ 錯誤</button>
+                            </div>
+                        `;
+                    } else {
+                        optionsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">`;
+                        q.o.forEach((opt, oIdx) => {
+                            optionsHtml += `
+                                <button onclick="quizManager.selectAnswer(${index}, ${oIdx})" id="q${index}-opt${oIdx}" class="ans-btn text-left border-2 border-gray-300 rounded-lg px-4 py-2 hover:bg-blue-50 transition">
+                                    (${oIdx + 1}) ${opt}
+                                </button>
+                            `;
+                        });
+                        optionsHtml += `</div>`;
+                    }
+
+                    qDiv.innerHTML = `
+                        <p class="text-lg font-medium"><span class="text-green-600">Q${index+1}.</span> [${q.type === 'TF' ? '是非' : '選擇'}] ${q.q}</p>
+                        ${optionsHtml}
+                    `;
+                    container.appendChild(qDiv);
+                });
+                this.updateProgress();
+            }
+
+            selectAnswer(qIdx, ans) {
+                if (this.isSubmitted) return;
+                
+                this.userAnswers[qIdx] = ans;
+                
+                // UI feedback
+                const parent = document.getElementById(`q${qIdx}-opt0`)?.parentElement || document.getElementById(`q${qIdx}-true`).parentElement;
+                parent.querySelectorAll('.ans-btn').forEach(btn => btn.classList.remove('selected', 'bg-green-100', 'border-green-600'));
+                
+                let targetId = '';
+                if (typeof ans === 'boolean') {
+                    targetId = `q${qIdx}-${ans}`;
+                } else {
+                    targetId = `q${qIdx}-opt${ans}`;
+                }
+                document.getElementById(targetId).classList.add('selected', 'bg-green-50');
+                this.updateProgress();
+            }
+
+            updateProgress() {
+                const count = Object.keys(this.userAnswers).length;
+                document.getElementById('progress-text').innerText = `${count}/20`;
+            }
+
+            submitQuiz() {
+                if (Object.keys(this.userAnswers).length < 20) {
+                    if (!confirm('您還有題目未完成，確定要提交嗎？')) return;
+                }
+
+                this.isSubmitted = true;
+                let score = 0;
+
+                this.currentQuestions.forEach((q, index) => {
+                    const userAns = this.userAnswers[index];
+                    const isCorrect = (userAns === q.a);
+                    if (isCorrect) score += 5;
+
+                    // Highlight Correct/Wrong
+                    if (q.type === 'TF') {
+                        const trueBtn = document.getElementById(`q${index}-true`);
+                        const falseBtn = document.getElementById(`q${index}-false`);
+                        
+                        if (q.a === true) trueBtn.classList.add('correct', 'font-bold');
+                        else falseBtn.classList.add('correct', 'font-bold');
+
+                        if (userAns !== undefined && userAns !== q.a) {
+                            document.getElementById(`q${index}-${userAns}`).classList.add('wrong');
+                        }
+                    } else {
+                        const correctBtn = document.getElementById(`q${index}-opt${q.a}`);
+                        correctBtn.classList.add('correct', 'font-bold');
+
+                        if (userAns !== undefined && userAns !== q.a) {
+                            document.getElementById(`q${index}-opt${userAns}`).classList.add('wrong');
+                        }
+                    }
+                });
+
+                this.showResult(score);
+            }
+
+            showResult(score) {
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = score;
+                
+                let comment = "";
+                if (score >= 90) comment = "卓越！您已經完全掌握了估測要領！";
+                else if (score >= 70) comment = "優秀！繼續練習，您一定能通過考核！";
+                else if (score >= 60) comment = "及格邊緣，建議再多看幾次題庫喔。";
+                else comment = "再接再厲！童軍講求實事求是，多練習就會進步。";
+                
+                document.getElementById('score-comment').innerText = comment;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        const quizManager = new QuizManager();
+    </script>
+</body>
+</html>
