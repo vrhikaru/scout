@@ -6,27 +6,24 @@
     <title>童軍永備尺與估測測驗系統</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { color: #2c5e1a; text-align: center; border-bottom: 2px solid #2c5e1a; padding-bottom: 10px; }
         h2 { color: #387c2b; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; cursor: pointer; background: #eee; border: 1px solid #ddd; border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; margin-bottom: -1px; }
-        .tab.active { background: #2c5e1a; color: white; border-color: #2c5e1a; font-weight: bold; z-index: 1; }
-        .content { display: none; padding: 20px; border: 1px solid #ddd; border-radius: 0 5px 5px 5px; background: #fafafa; }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd; }
+        .tab { padding: 10px 20px; cursor: pointer; background: #eee; border: 1px solid #ddd; border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; }
+        .tab.active { background: #2c5e1a; color: white; border-color: #2c5e1a; font-weight: bold; }
+        .content { display: none; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 5px 5px 5px; background: #fafafa; }
         .content.active { display: block; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #2c5e1a; color: #fff; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; transition: background 0.2s; }
+        button { background: #2c5e1a; color: #fff; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-size: 16px; margin-top: 10px; }
         button:hover { background: #1a4010; }
-        .btn-generate { background: #0056b3; margin-bottom: 15px; }
-        .btn-generate:hover { background: #004494; }
-        .result { margin-top: 15px; padding: 15px; border-radius: 4px; font-weight: bold; display: none; line-height: 1.8; }
+        .result { margin-top: 15px; padding: 15px; border-radius: 4px; font-weight: bold; display: none; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .question-box { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 15px; font-size: 18px; border-left: 5px solid #2c5e1a; }
-        .info-panel { background: #e2eef7; padding: 15px; border-radius: 5px; border-left: 4px solid #3b82f6; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; }
-        .info-item { background: white; padding: 5px 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .question-box { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 15px; font-size: 18px; }
+        .info-panel { background: #e2eef7; padding: 10px; border-left: 4px solid #3b82f6; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -35,38 +32,32 @@
     <h1>⛺ 童軍永備尺與估測測驗系統</h1>
     
     <div class="info-panel" id="current-measures">
-        <div style="width: 100%; margin-bottom: 5px;"><strong>目前永備尺設定 (公尺 m)：</strong></div>
-        <div class="info-item">單步長: <span id="disp-pace" style="color:red;font-weight:bold;">尚未設定</span></div>
-        <div class="info-item">庹長: <span id="disp-arm" style="color:red;font-weight:bold;">尚未設定</span></div>
-        <div class="info-item">指距: <span id="disp-span" style="color:red;font-weight:bold;">尚未設定</span></div>
-        <div class="info-item">眼高: <span id="disp-eye" style="color:red;font-weight:bold;">尚未設定</span></div>
+        <strong>目前永備尺設定：</strong> 
+        單步長: <span id="disp-pace">尚未設定</span> m | 
+        庹長: <span id="disp-arm">尚未設定</span> m | 
+        指距: <span id="disp-span">尚未設定</span> m
     </div>
 
     <div class="tabs">
         <div class="tab active" onclick="switchTab(event, 'calibration')">1. 永備尺校準</div>
         <div class="tab" onclick="switchTab(event, 'area-test')">2. 面積估測</div>
         <div class="tab" onclick="switchTab(event, 'volume-test')">3. 體積估測</div>
-        <div class="tab" onclick="switchTab(event, 'height-test')">4. 高度估測 (新增!)</div>
     </div>
 
     <!-- 1. 永備尺校準 -->
     <div id="calibration" class="content active">
         <h2>📏 建立你的專屬永備尺</h2>
-        <p>請實際測量後，輸入你的身體數值（單位：<strong>公分 cm</strong>）。系統會自動換算為公尺 (m) 供後續測驗使用。</p>
+        <p>請實際測量後，輸入你的身體數值（單位：公分 cm）。系統會自動換算為公尺 (m) 供後續測驗使用。</p>
         <div class="form-group">
-            <label for="pace">👣 單步長 (公分) - 平常走路的一步長度</label>
+            <label for="pace">單步長 (公分) - 平常走路的一步長度</label>
             <input type="number" id="pace" placeholder="例如：65">
         </div>
         <div class="form-group">
-            <label for="eye">👀 眼高 (公分) - 穿著鞋子時，腳底到眼睛的高度 (測量高度用)</label>
-            <input type="number" id="eye" placeholder="例如：155">
-        </div>
-        <div class="form-group">
-            <label for="arm">👐 庹長 (公分) - 雙臂平舉展開的長度</label>
+            <label for="arm">庹長 (公分) - 雙臂平舉展開的長度</label>
             <input type="number" id="arm" placeholder="例如：160">
         </div>
         <div class="form-group">
-            <label for="span">🖐️ 指距 (公分) - 大拇指到小指張開的長度</label>
+            <label for="span">指距 (公分) - 大拇指到小指張開的長度</label>
             <input type="number" id="span" placeholder="例如：20">
         </div>
         <button onclick="saveMeasures()">儲存並更新永備尺</button>
@@ -77,7 +68,7 @@
     <div id="area-test" class="content">
         <h2>🏕️ 面積估測挑戰</h2>
         <p>利用你設定的「單步長」來計算營地面積。</p>
-        <button class="btn-generate" onclick="generateAreaQuestion()">產生新題目</button>
+        <button onclick="generateAreaQuestion()" style="background:#0056b3; margin-bottom:15px;">產生新題目</button>
         
         <div id="area-q-container" style="display:none;">
             <div class="question-box" id="area-question"></div>
@@ -94,7 +85,7 @@
     <div id="volume-test" class="content">
         <h2>📦 體積估測挑戰</h2>
         <p>利用你的「指距」來計算裝備箱或水塔的體積。</p>
-        <button class="btn-generate" onclick="generateVolumeQuestion()">產生新題目</button>
+        <button onclick="generateVolumeQuestion()" style="background:#0056b3; margin-bottom:15px;">產生新題目</button>
         
         <div id="vol-q-container" style="display:none;">
             <div class="question-box" id="vol-question"></div>
@@ -107,33 +98,13 @@
         </div>
     </div>
 
-    <!-- 4. 高度估測測驗 (新增) -->
-    <div id="height-test" class="content">
-        <h2>🌲 高度估測挑戰</h2>
-        <p>利用相似三角形原理，結合你的「單步長」與「眼高」來測量樹木或旗桿的高度。</p>
-        <button class="btn-generate" onclick="generateHeightQuestion()">產生新題目</button>
-        
-        <div id="height-q-container" style="display:none;">
-            <div class="question-box" id="height-question"></div>
-            <div class="form-group">
-                <label for="height-answer">你的計算結果是幾「公尺」(m)？ (請四捨五入到小數點後第一位)</label>
-                <input type="number" id="height-answer" step="0.1" placeholder="輸入數字">
-            </div>
-            <button onclick="checkHeightAnswer()">送出答案</button>
-            <div id="height-msg" class="result"></div>
-        </div>
-    </div>
-
 </div>
 
 <script>
     // 儲存全域變數 (單位皆轉為公尺)
-    let measures = { pace: 0, arm: 0, span: 0, eye: 0 };
+    let measures = { pace: 0, arm: 0, span: 0 };
     let currentAreaAns = 0;
     let currentVolAns = 0;
-    let currentHeightAns = 0;
-    let currentHeightType = 1; // 1: 45度仰角法, 2: 桿影法
-    let heightStepData = { steps: 0, treeShadow: 0, stickShadow: 0 };
 
     // 頁籤切換邏輯
     function switchTab(evt, tabName) {
@@ -155,10 +126,9 @@
         let p = parseFloat(document.getElementById('pace').value);
         let a = parseFloat(document.getElementById('arm').value);
         let s = parseFloat(document.getElementById('span').value);
-        let e = parseFloat(document.getElementById('eye').value);
 
-        if(!p || !a || !s || !e) {
-            alert("請填寫所有四項數值喔！");
+        if(!p || !a || !s) {
+            alert("請填寫所有數值！");
             return;
         }
 
@@ -166,29 +136,21 @@
         measures.pace = p / 100;
         measures.arm = a / 100;
         measures.span = s / 100;
-        measures.eye = e / 100;
 
-        // 更新顯示面板
-        const updateDisp = (id, val) => {
-            const el = document.getElementById(id);
-            el.innerText = val;
-            el.style.color = "#155724";
-        };
-        updateDisp('disp-pace', measures.pace);
-        updateDisp('disp-arm', measures.arm);
-        updateDisp('disp-span', measures.span);
-        updateDisp('disp-eye', measures.eye);
+        document.getElementById('disp-pace').innerText = measures.pace;
+        document.getElementById('disp-arm').innerText = measures.arm;
+        document.getElementById('disp-span').innerText = measures.span;
 
         let msg = document.getElementById('calib-msg');
-        msg.innerText = "✅ 永備尺設定成功！請切換到上方的測驗區進行練習。";
+        msg.innerText = "設定成功！請切換到測驗區進行練習。";
         msg.style.display = "block";
         msg.className = "result success";
     }
 
     // 檢查是否已設定永備尺
     function checkSetup() {
-        if(measures.pace === 0 || measures.eye === 0) {
-            alert("請先完成「1. 永備尺校準」的所有欄位！");
+        if(measures.pace === 0) {
+            alert("請先完成「永備尺校準」！");
             return false;
         }
         return true;
@@ -198,14 +160,16 @@
     function generateAreaQuestion() {
         if(!checkSetup()) return;
         
+        // 隨機產生步數 (長10~30, 寬10~30)
         let lengthPaces = Math.floor(Math.random() * 21) + 10;
         let widthPaces = Math.floor(Math.random() * 21) + 10;
         
-        let qText = `你正在測量一個長方形的紮營地。你沿著長邊走了 <b>${lengthPaces} 步</b>，沿著寬邊走了 <b>${widthPaces} 步</b>。<br>請問這個營地的面積大約是多少平方公尺？`;
+        let qText = `你正在測量一個長方形的紮營地。你沿著長邊走了 <b>${lengthPaces} 步</b>，沿著寬邊走了 <b>${widthPaces} 步</b>。請問這個營地的面積大約是多少平方公尺？`;
         document.getElementById('area-question').innerHTML = qText;
         
+        // 計算標準答案：(長步數 * 步長) * (寬步數 * 步長)
         let actualArea = (lengthPaces * measures.pace) * (widthPaces * measures.pace);
-        currentAreaAns = Math.round(actualArea * 10) / 10; 
+        currentAreaAns = Math.round(actualArea * 10) / 10; // 四捨五入到小數第一位
 
         document.getElementById('area-q-container').style.display = "block";
         document.getElementById('area-msg').style.display = "none";
@@ -223,11 +187,12 @@
             return;
         }
 
+        // 容錯範圍 +/- 0.2
         if(Math.abs(userAns - currentAreaAns) <= 0.2) {
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentAreaAns}</b> m²。做得好！`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br><br>💡 <b>算法解析：</b><br>(長步數 × 步長) × (寬步數 × 步長)<br>= (... × ${measures.pace}) × (... × ${measures.pace})`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(長步數 × 步長) × (寬步數 × 步長) = (${measures.pace} × ...) × (${measures.pace} × ...)`;
             msg.className = "result error";
         }
     }
@@ -236,15 +201,17 @@
     function generateVolumeQuestion() {
         if(!checkSetup()) return;
         
+        // 隨機產生指距數 (長寬高 2~8 拃)
         let lSpan = Math.floor(Math.random() * 7) + 2;
         let wSpan = Math.floor(Math.random() * 7) + 2;
         let hSpan = Math.floor(Math.random() * 7) + 2;
         
-        let qText = `你要計算一個童軍裝備木箱的體積。你用手量測，長度是 <b>${lSpan} 個指距</b>，寬度是 <b>${wSpan} 個指距</b>，高度是 <b>${hSpan} 個指距</b>。<br>請問體積大約是多少立方公尺？`;
+        let qText = `你要計算一個童軍裝備木箱的體積。你用手量測，長度是 <b>${lSpan} 個指距</b>，寬度是 <b>${wSpan} 個指距</b>，高度是 <b>${hSpan} 個指距</b>。請問體積大約是多少立方公尺？`;
         document.getElementById('vol-question').innerHTML = qText;
         
+        // 計算標準答案
         let actualVol = (lSpan * measures.span) * (wSpan * measures.span) * (hSpan * measures.span);
-        currentVolAns = Math.round(actualVol * 1000) / 1000; 
+        currentVolAns = Math.round(actualVol * 1000) / 1000; // 四捨五入到小數第三位
 
         document.getElementById('vol-q-container').style.display = "block";
         document.getElementById('vol-msg').style.display = "none";
@@ -262,78 +229,12 @@
             return;
         }
 
+        // 容錯範圍 +/- 0.005
         if(Math.abs(userAns - currentVolAns) <= 0.005) {
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentVolAns}</b> m³。很厲害！`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br><br>💡 <b>算法解析：</b><br>先算出長寬高的實際公尺數，再相乘。<br>= (長指距數 × ${measures.span}) × (寬指距數 × ${measures.span}) × (高指距數 × ${measures.span})`;
-            msg.className = "result error";
-        }
-    }
-
-    // --- 高度測驗邏輯 (新增) ---
-    function generateHeightQuestion() {
-        if(!checkSetup()) return;
-        
-        // 隨機選擇題型 (1: 45度仰角法, 2: 桿影比例法)
-        currentHeightType = Math.random() > 0.5 ? 1 : 2;
-        let qText = "";
-
-        if (currentHeightType === 1) {
-            // 題型一：45度仰角法
-            heightStepData.steps = Math.floor(Math.random() * 15) + 10; // 10~24步
-            qText = `【方法：45度仰角倒影法】<br>你站在一棵大樹下，往後退了 <b>${heightStepData.steps} 步</b>後，彎腰從胯下往後看（或是利用45度三角板），發現看樹頂的仰角剛好是 45 度。<br>根據等腰直角三角形原理，請利用你的「單步長」和「眼高」來計算這棵樹的高度大約是多少公尺？`;
-            
-            // 計算：水平距離(步數*步長) + 眼高
-            let actualHeight = (heightStepData.steps * measures.pace) + measures.eye;
-            currentHeightAns = Math.round(actualHeight * 10) / 10;
-        } else {
-            // 題型二：相似三角形 - 桿影法
-            heightStepData.treeShadow = Math.floor(Math.random() * 20) + 15; // 樹影 15~34步
-            heightStepData.stickShadow = Math.floor(Math.random() * 3) + 2;   // 棍影 2~4步
-            qText = `【方法：相似三角形 - 桿影法】<br>今天陽光普照，你將一根標準 <b>1.5 公尺</b> 的童軍棍直立在地上，測得它的影子長度是 <b>${heightStepData.stickShadow} 步</b>。<br>同時，你測量旁邊營區旗桿的影子長度是 <b>${heightStepData.treeShadow} 步</b>。<br>請算出旗桿的實際高度大約是多少公尺？`;
-            
-            // 計算：樹影實際長度 * (棍高 / 棍影實際長度)  
-            // 其實步長會互相抵消 = 樹影步數 * (1.5 / 棍影步數)，但標準流程是換算成公尺
-            let treeShadowMeters = heightStepData.treeShadow * measures.pace;
-            let stickShadowMeters = heightStepData.stickShadow * measures.pace;
-            let actualHeight = treeShadowMeters * (1.5 / stickShadowMeters);
-            
-            currentHeightAns = Math.round(actualHeight * 10) / 10;
-        }
-
-        document.getElementById('height-question').innerHTML = qText;
-        document.getElementById('height-q-container').style.display = "block";
-        document.getElementById('height-msg').style.display = "none";
-        document.getElementById('height-answer').value = "";
-    }
-
-    function checkHeightAnswer() {
-        let userAns = parseFloat(document.getElementById('height-answer').value);
-        let msg = document.getElementById('height-msg');
-        msg.style.display = "block";
-
-        if(isNaN(userAns)) {
-            msg.innerText = "請輸入數字！";
-            msg.className = "result error";
-            return;
-        }
-
-        // 容錯範圍 +/- 0.2 公尺
-        if(Math.abs(userAns - currentHeightAns) <= 0.2) {
-            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentHeightAns}</b> m。做得好！`;
-            msg.className = "result success";
-        } else {
-            let explanation = "";
-            if(currentHeightType === 1) {
-                explanation = `(退後步數 × 單步長) + 眼高<br>= (${heightStepData.steps} × ${measures.pace}) + ${measures.eye}`;
-            } else {
-                let t_m = Math.round(heightStepData.treeShadow * measures.pace * 10)/10;
-                let s_m = Math.round(heightStepData.stickShadow * measures.pace * 10)/10;
-                explanation = `旗桿影長公尺 × (童軍棍高 / 棍影長公尺)<br>= ${t_m}m × (1.5m / ${s_m}m)<br><i>(註：用步數比例直接算 ${heightStepData.treeShadow} ÷ ${heightStepData.stickShadow} × 1.5 也行得通喔！)</i>`;
-            }
-
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentHeightAns}</b> m。<br><br>💡 <b>算法解析：</b><br>${explanation}`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：(長 × 寬 × 高) 的指距次數各自乘上你的指距長度(${measures.span}m) 再相乘。`;
             msg.className = "result error";
         }
     }
