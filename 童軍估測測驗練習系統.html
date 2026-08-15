@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>童軍估測測驗練習系統</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-light: #e8f5e9;
+            --secondary-color: #f57c00;
+            --text-color: #333;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary-color), #1b5e20);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .quiz-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .quiz-card.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .topic-badge {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 15px 20px;
+            background-color: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .option-btn.correct {
+            background-color: #e8f5e9;
+            border-color: var(--success-color);
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            color: #c62828;
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            font-size: 15px;
+        }
+
+        .feedback-box.show {
+            display: block;
+        }
+
+        .feedback-box.correct {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-left: 5px solid var(--success-color);
+        }
+
+        .feedback-box.incorrect {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 5px solid var(--error-color);
+        }
+
+        .hint-box {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #fffde7;
+            border-left: 5px solid #fbc02d;
+            color: #f57f17;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1b5e20;
+        }
+
+        .btn-primary:disabled {
+            background-color: #cccccc;
+        }
+
+        /* 結果頁面樣式 */
+        .result-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            display: none;
+        }
+
+        .result-card.active {
+            display: block;
+        }
+
+        .score-display {
+            font-size: 64px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        .summary-text {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚜️ 童軍估測測驗練習系統</h1>
+        <p>精準估測，走向戶外！驗收你的永備尺與測高測遠技能。</p>
+        <div class="stats-bar">
+            <div>題號: <span id="current-question-num">1</span> / <span id="total-questions-num">0</span></div>
+            <div>目前得分: <span id="live-score">0</span> 分</div>
+            <div>經過時間: <span id="timer">00:00</span></div>
+        </div>
+    </header>
+
+    <!-- 測驗卡片容器 -->
+    <div id="quiz-container"></div>
+
+    <!-- 結果結算卡片 -->
+    <div id="result-card" class="result-card">
+        <h2>🎉 測驗完成！</h2>
+        <div class="score-display"><span id="final-score">0</span>/100</div>
+        <p class="summary-text" id="summary-message"></p>
+        <button class="nav-btn btn-primary" onclick="restartQuiz()">再挑戰一次</button>
+    </div>
+</div>
+
+<script>
+    // 題目資料庫
+    const quizData = [
+        {
+            topic: "常數體尺：指幅計算",
+            question: "羅浮童軍小明想利用自己的「常數體尺」來估測一段未知長度。已知他的單指指幅（食指第一節寬度）約為3公分。如果他在牆壁上測得某標示的寬度為15個指幅，請問這個標示的實際寬度大約是多少？",
+            options: ["15公分", "30公分", "45公分", "60公分"],
+            correctIndex: 2,
+            hint: "提示：請先確認您自己單指的常數長度（指幅），然後將這個常數乘以您在目標物上所測得的指幅數量。",
+            reasons: [
+                "錯誤。您似乎把總指幅數當作了公分數。請將單指指幅寬度乘以指幅總數來計算。",
+                "錯誤。這樣計算出來的結果只相當於10個指幅的長度。請再檢查一次算式：3乘以15。",
+                "正確！答對了！將單指指幅（3公分）乘以測得的指幅數（15），即可得出實際寬度為45公分。",
+                "錯誤。這樣計算的結果相當於20個指幅的長度，超過了題目給定的15個指幅。"
+            ]
+        },
+        {
+            topic: "步測校正：步長計算",
+            question: "在進行步測法之前，必須先進行「步長校正」。童軍小華在平地上走了一段已知為50公尺的距離，來計算自己走完這段距離的平均步數。已知小華走50公尺需要走62.5步，請問小華的平均步長大約是多少？",
+            options: ["60公分", "70公分", "80公分", "90公分"],
+            correctIndex: 2,
+            hint: "提示：步長（公尺/公分）＝ 總距離 ÷ 總步數。記得將公尺轉換為公分（1公尺＝100公分）會比較好計算。",
+            reasons: [
+                "錯誤。這個步長太短了。如果步長是60公分，走50公尺需要超過83步，與題目條件不符。",
+                "錯誤。這樣的步長走62.5步只會到達約43.75公尺。請重新計算50除以62.5。",
+                "正確！答對了！將總距離（5000公分）除以總步數（62.5步），即可得出平均一步的長度為80公分。",
+                "錯誤。這個步長太長了。如果是90公分，走62.5步將會達到56.25公尺。"
+            ]
+        },
+        {
+            topic: "步測校正：距離估測應用",
+            question: "延續上一題，已知小華的平均步長為80公分。今天他在營地旁沿著一條直線步測，從營火場走到小溪邊總共走了150步，請問他測得的距離大約是多少公尺？",
+            options: ["120公尺", "150公尺", "180公尺", "210公尺"],
+            correctIndex: 0,
+            hint: "提示：估測距離的公式為：總距離 ＝ 總步數 × 平均步長。記得先統一單位（如公尺）。",
+            reasons: [
+                "正確！答對了！將步數（150步）乘以平均步長（0.8公尺），即可得出距離為120公尺。",
+                "錯誤。您可能把步數直接當作公尺了。別忘了還要乘以您的平均步長。",
+                "錯誤。這個答案太大了。請將總步數與步長重新相乘：150 × 0.8。",
+                "錯誤。此距離明顯高於正確計算值。步長0.8公尺乘上150步，數值會更小。"
+            ]
+        },
+        {
+            topic: "水平傾斜法：測高原理",
+            question: "「水平傾斜法」（拿破崙測高法）是童軍常用的測高技巧之一。當使用這項方法測量樹高時，觀測者需要拿一根木棒或鉛筆，並調整站立位置，使木棒長度在視覺上與樹高相等。這個方法主要運用了什麼幾何原理？",
+            options: ["畢氏定理", "拋物線原理", "等腰直角三角形", "槓桿原理"],
+            correctIndex: 2,
+            hint: "提示：想想看，當你手臂伸直並與地面平行，將木棒垂直拿著，視線形成的角度會構成哪一種特殊的三角形？",
+            reasons: [
+                "錯誤。畢氏定理主要用於計算直角三角形的斜邊長度，並非水平傾斜法測高的核心原理。",
+                "錯誤。拋物線通常與物體受重力拋射的軌跡有關，與直立的樹木高度測量無關。",
+                "正確！答對了！此方法將手臂打平、木棒垂直，利用45度角原理構成一個等腰直角三角形，因此地面的水平距離即等於樹高。",
+                "錯誤。槓桿原理是關於力的平衡與力矩，與視覺距離或高度估測無關。"
+            ]
+        },
+        {
+            topic: "水平傾斜法：測高情境",
+            question: "小美使用「水平傾斜法」來測量營地旁的一棵大樹高度。她將一根長度為100公分的樹枝垂直拿在手中，手臂伸直並保持水平。她向後退，直到視覺上樹枝的頂端與樹頂對齊，樹枝的底部與樹根對齊。此時她量出自己站立的位置距離樹幹根部的地面距離為15公尺。請問這棵樹的高度大約是多少？",
+            options: ["15公尺", "12公尺", "18公尺", "20公尺"],
+            correctIndex: 0,
+            hint: "提示：利用「等腰直角三角形」的特性，您與樹木之間的水平距離，就是樹木的高度。",
+            reasons: [
+                "正確！答對了！根據等腰直角三角形原理，觀測者到樹的水平距離等於樹的高度。",
+                "錯誤。您可能將樹枝長度與地面距離搞混了。這兩種數值在該方法中不直接用於計算樹高。",
+                "錯誤。在此方法中，樹的高度不等於加上樹枝長度之後的距離。請回想等腰直角三角形的比例特性。",
+                "錯誤。這樣的答案大於地面的水平測量距離。樹高應當完全對應於您量測的水平地面距離。"
+            ]
+        },
+        {
+            topic: "1:10比例測遠法：原理",
+            question: "童軍常用的「1:10比例測遠法」（或稱帽簷測遠法）是一種快速估測河寬或距離的方法。這個方法是基於相似三角形的比例關係。通常觀測者的人體常數中，兩眼瞳孔間距與手臂長度的比例標準大約是多少，來形成這個1:10的視覺比例？",
+            options: ["1:1", "1:5", "1:50", "1:10"],
+            correctIndex: 3,
+            hint: "提示：這個方法之所以被稱為「1:10」，是因為人體某兩處的長度比例剛好是1:10。這兩處分別是雙眼的距離與手臂的長度。",
+            reasons: [
