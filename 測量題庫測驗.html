@@ -8,11 +8,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
         
-        /* --- 新增這行：強制隱藏未啟用的區塊，不依賴外部網路 --- */
         .hidden { 
             display: none !important; 
         }
-        /* ---------------------------------------------------- */
 
         html, body { 
             font-family: 'Noto+Sans+TC', sans-serif; 
@@ -28,6 +26,7 @@
             appearance: none !important;
             -webkit-tap-highlight-color: transparent;
             outline: none;
+            cursor: pointer;
         }
         
         @media (hover: none) {
@@ -37,50 +36,85 @@
             .hover\:scale-105:hover { transform: none !important; }
         }
 
-        .correct { color: #15803d !important; background-color: #dcfce7 !important; border-color: #15803d !important; }
-        .wrong { color: #b91c1c !important; background-color: #fee2e2 !important; border-color: #b91c1c !important; }
+        .correct { color: #15803d !important; background-color: #dcfce7 !important; border-color: #15803d !important; font-weight: bold; }
+        .wrong { color: #b91c1c !important; background-color: #fee2e2 !important; border-color: #b91c1c !important; font-weight: bold; }
         .selected { border: 2px solid #166534 !important; background-color: #f0fdf4 !important; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div id="app" class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <div id="app" class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mt-4">
+        
         <!-- Start Screen -->
         <div id="start-screen" class="p-8 text-center">
             <h1 class="text-2xl md:text-3xl font-bold text-green-800 mb-4">高級考驗營估測筆試練習</h1>
-            <p class="text-gray-600 mb-8">本測驗隨機抽取 20 題，包含是非題與選擇題。<br>準備好了嗎？點擊下方按鈕開始。</p>
-            <button onclick="quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full transition duration-300 transform hover:scale-105 shadow-md">
-                開始測驗
-            </button>
-        </div>
-
-        <!-- Quiz Screen (Hidden by default) -->
-        <div id="quiz-screen" class="hidden p-6">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <span class="text-green-700 font-bold">進度: <span id="progress-text">0/20</span></span>
-                <span id="timer" class="text-gray-500 italic"></span>
-            </div>
-            
-            <div id="questions-container" class="space-y-8">
-                <!-- Questions will be injected here -->
-            </div>
-
-            <div class="mt-10 flex justify-center">
-                <button onclick="quizManager.submitQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-lg transition duration-300">
-                    提交測驗
+            <p class="text-gray-600 mb-8">請選擇您要進行的模式：</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="window.quizManager.startPractice()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md">
+                    📖 單題抽背練習
+                </button>
+                <button onclick="window.quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-md">
+                    📝 開始模擬測驗 (20題)
                 </button>
             </div>
         </div>
 
-        <!-- Result Screen (Hidden by default) -->
+        <!-- Practice Screen (單題抽背) -->
+        <div id="practice-screen" class="hidden p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <span class="text-blue-700 font-bold">練習模式</span>
+                <span class="text-gray-500 font-medium">已練習: <span id="practice-count">0</span> 題 | 答對: <span id="practice-correct" class="text-green-600">0</span> 題</span>
+            </div>
+            
+            <div id="practice-question-container" class="space-y-4">
+                <!-- 單題題目會產生在這裡 -->
+            </div>
+
+            <!-- 即時回饋區 -->
+            <div id="practice-feedback" class="mt-4 hidden p-4 rounded-lg text-lg font-bold text-center"></div>
+
+            <div class="mt-8 flex justify-between gap-4">
+                <button onclick="window.quizManager.quitPractice()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg w-1/3">
+                    結束練習
+                </button>
+                <button id="btn-next-practice" onclick="window.quizManager.nextPracticeQuestion()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg w-2/3 shadow-md">
+                    下一題 ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen (模擬測驗) -->
+        <div id="quiz-screen" class="hidden p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <span class="text-green-700 font-bold">進度: <span id="progress-text">0/20</span></span>
+            </div>
+            
+            <div id="questions-container" class="space-y-8">
+                <!-- 題目會產生在這裡 -->
+            </div>
+
+            <div class="mt-10 flex justify-center gap-4">
+                <button id="btn-submit-quiz" onclick="window.quizManager.submitQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-lg">
+                    提交測驗
+                </button>
+                <button id="btn-back-result" onclick="window.quizManager.backToResult()" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-10 rounded-lg">
+                    🔙 返回成績板
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
         <div id="result-screen" class="hidden p-8 text-center">
             <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗結束！</h2>
             <div class="text-6xl font-black text-green-600 mb-4" id="final-score">0</div>
             <p class="text-xl text-gray-700 mb-6" id="score-comment"></p>
-            <div class="space-y-4">
-                <button onclick="quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg transition mr-2">
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="window.quizManager.reviewQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg">
+                    👀 查看解答
+                </button>
+                <button onclick="window.quizManager.startQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg">
                     再測一次
                 </button>
-                <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-8 rounded-lg transition">
+                <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-8 rounded-lg">
                     回首頁
                 </button>
             </div>
@@ -88,8 +122,7 @@
     </div>
 
     <script>
-        const rawQuestions = [
-            // 是非題 1-100
+        var rawQuestions = [
             { type: 'TF', q: "一般面積測法是當土地面積不成方形時,可將其劃分為若干直角三角形,分別求出面積後,再行相加得出總面積。", a: true },
             { type: 'TF', q: "我國高級童軍的估測誤差規定不得超過15%。", a: false },
             { type: 'TF', q: "一般情形下與他人距離100公尺時,對方的面目不甚清楚。", a: true },
@@ -190,14 +223,11 @@
             { type: 'TF', q: "用目力測距離法,天氣晴爽時,容易認遠為近。", a: true },
             { type: 'TF', q: "用目力測距離法,地面極平坦時,容易認遠為近。", a: true },
             { type: 'TF', q: "用目力測距離法,目的物和背景不同色時,容易認遠為近。", a: true },
-
-            // 選擇題 1-100 (部分轉換)
             { type: 'MC', q: "標準童軍棍的長度為多少公分？", o: ["125公分", "100公分", "150公分", "200公分"], a: 2 },
             { type: 'MC', q: "估測長度時可能用到哪些？", o: ["繩子", "手", "便步長", "以上皆是"], a: 3 },
             { type: 'MC', q: "一般情形下用目力測法與他人距離600公尺時：", o: ["人身各部尚可辨別", "人身如像一枝小樹", "頭部如一點", "不可辨別衣帽的顏色"], a: 2 },
             { type: 'MC', q: "下列何種情形易誤認遠為近？", o: ["背景顏色相同", "有霧時", "目的物在暗處時", "看水面或深谷時"], a: 3 },
             { type: 'MC', q: "一樹影長6公尺,伙伴身高1.5公尺站立旁,其影長0.5公尺,樹高為？", o: ["18公尺", "2公尺", "3公尺", "12公尺"], a: 0 },
-            { type: 'MC', q: "如圖(三角測法), BC=50步, CD=25步, DE=30步, 則河寬AB約為？", o: ["15步", "100步", "60步", "50步"], a: 2 },
             { type: 'MC', q: "長40公尺、寬20公尺的營地面積為？", o: ["800平方公尺", "100平方公尺", "200平方公尺", "400平方公尺"], a: 0 },
             { type: 'MC', q: "下列何者不屬於永備尺？", o: ["身高", "便步長", "童軍繩", "腳長"], a: 2 },
             { type: 'MC', q: "長71公尺、寬77公尺的營地面積為？", o: ["5467平方公尺", "4567平方公尺", "7654平方公尺", "6547平方公尺"], a: 0 },
@@ -216,149 +246,287 @@
             { type: 'MC', q: "1克拉等於多少毫克？", o: ["200毫克", "400毫克", "500毫克", "100毫克"], a: 0 },
             { type: 'MC', q: "身體質量指數(BMI)的單位是？", o: ["g/cm", "kg/m2", "kg/m", "g/cm2"], a: 1 },
             { type: 'MC', q: "下列何者不屬於長度單位？", o: ["cm2", "mm", "nm", "ft."], a: 0 }
-            // 為簡化示範，此處僅列出精選題目。實際應用時已在下方 quizManager 載入更多。
         ];
 
-        class QuizManager {
-            constructor() {
-                this.currentQuestions = [];
-                this.userAnswers = {};
-                this.isSubmitted = false;
+        var QuizManager = function() {
+            this.currentQuestions = [];
+            this.userAnswers = {};
+            this.isSubmitted = false;
+            
+            // 練習模式專用變數
+            this.currentPracticeQuestion = null;
+            this.practiceCount = 0;
+            this.practiceCorrect = 0;
+            this.isPracticeAnswered = false;
+        };
+
+        /* ============================
+           共用功能
+           ============================ */
+        QuizManager.prototype.hideAllScreens = function() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('practice-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+        };
+
+        /* ============================
+           單題抽背練習模式
+           ============================ */
+        QuizManager.prototype.startPractice = function() {
+            this.practiceCount = 0;
+            this.practiceCorrect = 0;
+            this.updatePracticeStats();
+            this.hideAllScreens();
+            document.getElementById('practice-screen').classList.remove('hidden');
+            this.nextPracticeQuestion();
+        };
+
+        QuizManager.prototype.nextPracticeQuestion = function() {
+            this.isPracticeAnswered = false;
+            document.getElementById('practice-feedback').classList.add('hidden');
+            document.getElementById('btn-next-practice').classList.add('hidden');
+            
+            var randomIndex = Math.floor(Math.random() * rawQuestions.length);
+            this.currentPracticeQuestion = rawQuestions[randomIndex];
+            
+            this.renderPracticeQuestion();
+        };
+
+        QuizManager.prototype.renderPracticeQuestion = function() {
+            var container = document.getElementById('practice-question-container');
+            container.innerHTML = '';
+            
+            var q = this.currentPracticeQuestion;
+            var qDiv = document.createElement('div');
+            qDiv.className = 'bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm';
+            
+            var optionsHtml = '';
+            if (q.type === 'TF') {
+                optionsHtml = 
+                    '<div class="flex gap-4 mt-4">' +
+                        '<button onclick="window.quizManager.selectPracticeAnswer(true)" id="p-opt-true" class="p-ans-btn flex-1 border-2 border-gray-300 rounded-lg px-6 py-4 text-lg">○ 正確</button>' +
+                        '<button onclick="window.quizManager.selectPracticeAnswer(false)" id="p-opt-false" class="p-ans-btn flex-1 border-2 border-gray-300 rounded-lg px-6 py-4 text-lg">╳ 錯誤</button>' +
+                    '</div>';
+            } else {
+                optionsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">';
+                for (var oIdx = 0; oIdx < q.o.length; oIdx++) {
+                    optionsHtml += 
+                        '<button onclick="window.quizManager.selectPracticeAnswer(' + oIdx + ')" id="p-opt-' + oIdx + '" class="p-ans-btn text-left border-2 border-gray-300 rounded-lg px-4 py-3 text-lg">' +
+                            '(' + (oIdx + 1) + ') ' + q.o[oIdx] +
+                        '</button>';
+                }
+                optionsHtml += '</div>';
             }
 
-            startQuiz() {
-                this.isSubmitted = false;
-                this.userAnswers = {};
-                this.currentQuestions = this.getRandomQuestions(20);
+            var typeLabel = q.type === 'TF' ? '是非' : '選擇';
+            qDiv.innerHTML = 
+                '<p class="text-xl font-medium mb-2"><span class="text-blue-600 font-bold">[' + typeLabel + '題]</span></p>' + 
+                '<p class="text-lg text-gray-800 leading-relaxed">' + q.q + '</p>' + 
+                optionsHtml;
                 
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.add('hidden');
-                document.getElementById('quiz-screen').classList.remove('hidden');
-                
-                this.renderQuestions();
-                window.scrollTo(0, 0);
+            container.appendChild(qDiv);
+        };
+
+        QuizManager.prototype.selectPracticeAnswer = function(ans) {
+            if (this.isPracticeAnswered) return; 
+            this.isPracticeAnswered = true;
+            this.practiceCount++;
+            
+            var q = this.currentPracticeQuestion;
+            var isCorrect = (ans === q.a);
+            
+            if (isCorrect) {
+                this.practiceCorrect++;
+            }
+            this.updatePracticeStats();
+            
+            var feedbackBox = document.getElementById('practice-feedback');
+            feedbackBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            
+            if (q.type === 'TF') {
+                document.getElementById('p-opt-' + q.a).classList.add('correct');
+                if (!isCorrect) document.getElementById('p-opt-' + ans).classList.add('wrong');
+            } else {
+                document.getElementById('p-opt-' + q.a).classList.add('correct');
+                if (!isCorrect) document.getElementById('p-opt-' + ans).classList.add('wrong');
             }
 
-            getRandomQuestions(num) {
-                const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
-                return shuffled.slice(0, num);
+            if (isCorrect) {
+                feedbackBox.classList.add('bg-green-100', 'text-green-800');
+                feedbackBox.innerText = "🎉 答對了！";
+            } else {
+                feedbackBox.classList.add('bg-red-100', 'text-red-800');
+                var correctText = q.type === 'TF' ? (q.a ? "○ 正確" : "╳ 錯誤") : "(" + (q.a + 1) + ") " + q.o[q.a];
+                feedbackBox.innerHTML = "❌ 答錯了！<br>正確答案是：<span class='text-black font-black'>" + correctText + "</span>";
             }
+            
+            document.getElementById('btn-next-practice').classList.remove('hidden');
+        };
 
-            renderQuestions() {
-                const container = document.getElementById('questions-container');
-                container.innerHTML = '';
-                
-                this.currentQuestions.forEach((q, index) => {
-                    const qDiv = document.createElement('div');
-                    qDiv.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
-                    
-                    let optionsHtml = '';
-                    if (q.type === 'TF') {
-                        optionsHtml = `
-                            <div class="flex gap-4 mt-3">
-                                <button onclick="quizManager.selectAnswer(${index}, true)" id="q${index}-true" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2 hover:bg-green-50 transition">○ 正確</button>
-                                <button onclick="quizManager.selectAnswer(${index}, false)" id="q${index}-false" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2 hover:bg-red-50 transition">╳ 錯誤</button>
-                            </div>
-                        `;
-                    } else {
-                        optionsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">`;
-                        q.o.forEach((opt, oIdx) => {
-                            optionsHtml += `
-                                <button onclick="quizManager.selectAnswer(${index}, ${oIdx})" id="q${index}-opt${oIdx}" class="ans-btn text-left border-2 border-gray-300 rounded-lg px-4 py-2 hover:bg-blue-50 transition">
-                                    (${oIdx + 1}) ${opt}
-                                </button>
-                            `;
-                        });
-                        optionsHtml += `</div>`;
-                    }
+        QuizManager.prototype.updatePracticeStats = function() {
+            document.getElementById('practice-count').innerText = this.practiceCount;
+            document.getElementById('practice-correct').innerText = this.practiceCorrect;
+        };
 
-                    qDiv.innerHTML = `
-                        <p class="text-lg font-medium"><span class="text-green-600">Q${index+1}.</span> [${q.type === 'TF' ? '是非' : '選擇'}] ${q.q}</p>
-                        ${optionsHtml}
-                    `;
-                    container.appendChild(qDiv);
-                });
-                this.updateProgress();
+        QuizManager.prototype.quitPractice = function() {
+            if(confirm("確定要結束練習並返回首頁嗎？")) {
+                this.hideAllScreens();
+                document.getElementById('start-screen').classList.remove('hidden');
             }
+        };
 
-            selectAnswer(qIdx, ans) {
-                if (this.isSubmitted) return;
+        /* ============================
+           模擬測驗 (20題)
+           ============================ */
+        QuizManager.prototype.startQuiz = function() {
+            this.isSubmitted = false;
+            this.userAnswers = {};
+            
+            var shuffled = rawQuestions.slice().sort(function() { return 0.5 - Math.random(); });
+            this.currentQuestions = shuffled.slice(0, 20);
+            
+            // 重置按鈕狀態
+            document.getElementById('btn-submit-quiz').classList.remove('hidden');
+            document.getElementById('btn-back-result').classList.add('hidden');
+
+            this.hideAllScreens();
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            this.renderQuestions();
+            window.scrollTo(0, 0);
+        };
+
+        QuizManager.prototype.renderQuestions = function() {
+            var container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            
+            for (var index = 0; index < this.currentQuestions.length; index++) {
+                var q = this.currentQuestions[index];
+                var qDiv = document.createElement('div');
+                qDiv.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200';
                 
-                this.userAnswers[qIdx] = ans;
-                
-                // UI feedback
-                const parent = document.getElementById(`q${qIdx}-opt0`)?.parentElement || document.getElementById(`q${qIdx}-true`).parentElement;
-                parent.querySelectorAll('.ans-btn').forEach(btn => btn.classList.remove('selected', 'bg-green-100', 'border-green-600'));
-                
-                let targetId = '';
-                if (typeof ans === 'boolean') {
-                    targetId = `q${qIdx}-${ans}`;
+                var optionsHtml = '';
+                if (q.type === 'TF') {
+                    optionsHtml = 
+                        '<div class="flex gap-4 mt-3">' +
+                            '<button onclick="window.quizManager.selectAnswer(' + index + ', true)" id="q' + index + '-true" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2">○ 正確</button>' +
+                            '<button onclick="window.quizManager.selectAnswer(' + index + ', false)" id="q' + index + '-false" class="ans-btn border-2 border-gray-300 rounded-lg px-6 py-2">╳ 錯誤</button>' +
+                        '</div>';
                 } else {
-                    targetId = `q${qIdx}-opt${ans}`;
-                }
-                document.getElementById(targetId).classList.add('selected', 'bg-green-50');
-                this.updateProgress();
-            }
-
-            updateProgress() {
-                const count = Object.keys(this.userAnswers).length;
-                document.getElementById('progress-text').innerText = `${count}/20`;
-            }
-
-            submitQuiz() {
-                if (Object.keys(this.userAnswers).length < 20) {
-                    if (!confirm('您還有題目未完成，確定要提交嗎？')) return;
-                }
-
-                this.isSubmitted = true;
-                let score = 0;
-
-                this.currentQuestions.forEach((q, index) => {
-                    const userAns = this.userAnswers[index];
-                    const isCorrect = (userAns === q.a);
-                    if (isCorrect) score += 5;
-
-                    // Highlight Correct/Wrong
-                    if (q.type === 'TF') {
-                        const trueBtn = document.getElementById(`q${index}-true`);
-                        const falseBtn = document.getElementById(`q${index}-false`);
-                        
-                        if (q.a === true) trueBtn.classList.add('correct', 'font-bold');
-                        else falseBtn.classList.add('correct', 'font-bold');
-
-                        if (userAns !== undefined && userAns !== q.a) {
-                            document.getElementById(`q${index}-${userAns}`).classList.add('wrong');
-                        }
-                    } else {
-                        const correctBtn = document.getElementById(`q${index}-opt${q.a}`);
-                        correctBtn.classList.add('correct', 'font-bold');
-
-                        if (userAns !== undefined && userAns !== q.a) {
-                            document.getElementById(`q${index}-opt${userAns}`).classList.add('wrong');
-                        }
+                    optionsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">';
+                    for (var oIdx = 0; oIdx < q.o.length; oIdx++) {
+                        optionsHtml += 
+                            '<button onclick="window.quizManager.selectAnswer(' + index + ', ' + oIdx + ')" id="q' + index + '-opt' + oIdx + '" class="ans-btn text-left border-2 border-gray-300 rounded-lg px-4 py-2">' +
+                                '(' + (oIdx + 1) + ') ' + q.o[oIdx] +
+                            '</button>';
                     }
-                });
+                    optionsHtml += '</div>';
+                }
 
-                this.showResult(score);
+                var typeLabel = q.type === 'TF' ? '是非' : '選擇';
+                qDiv.innerHTML = 
+                    '<p class="text-lg font-medium"><span class="text-green-600">Q' + (index+1) + '.</span> [' + typeLabel + '] ' + q.q + '</p>' + 
+                    optionsHtml;
+                container.appendChild(qDiv);
+            }
+            this.updateProgress();
+        };
+
+        QuizManager.prototype.selectAnswer = function(qIdx, ans) {
+            if (this.isSubmitted) return;
+            this.userAnswers[qIdx] = ans;
+            
+            var parentElement = document.getElementById('q' + qIdx + '-opt0') 
+                ? document.getElementById('q' + qIdx + '-opt0').parentElement 
+                : document.getElementById('q' + qIdx + '-true').parentElement;
+            
+            var buttons = parentElement.getElementsByClassName('ans-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('selected', 'bg-green-50');
+            }
+            
+            var targetId = typeof ans === 'boolean' ? 'q' + qIdx + '-' + ans : 'q' + qIdx + '-opt' + ans;
+            document.getElementById(targetId).classList.add('selected', 'bg-green-50');
+            this.updateProgress();
+        };
+
+        QuizManager.prototype.updateProgress = function() {
+            var count = Object.keys(this.userAnswers).length;
+            document.getElementById('progress-text').innerText = count + '/20';
+        };
+
+        QuizManager.prototype.submitQuiz = function() {
+            var count = Object.keys(this.userAnswers).length;
+            if (count < 20) {
+                if (!confirm('您還有題目未完成，確定要提交嗎？')) return;
             }
 
-            showResult(score) {
-                document.getElementById('quiz-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.remove('hidden');
-                document.getElementById('final-score').innerText = score;
-                
-                let comment = "";
-                if (score >= 90) comment = "卓越！您已經完全掌握了估測要領！";
-                else if (score >= 70) comment = "優秀！繼續練習，您一定能通過考核！";
-                else if (score >= 60) comment = "及格邊緣，建議再多看幾次題庫喔。";
-                else comment = "再接再厲！童軍講求實事求是，多練習就會進步。";
-                
-                document.getElementById('score-comment').innerText = comment;
-                window.scrollTo(0, 0);
-            }
-        }
+            this.isSubmitted = true;
+            var score = 0;
 
-        const quizManager = new QuizManager();
+            for (var index = 0; index < this.currentQuestions.length; index++) {
+                var q = this.currentQuestions[index];
+                var userAns = this.userAnswers[index];
+                var isCorrect = (userAns === q.a);
+                if (isCorrect) score += 5;
+
+                if (q.type === 'TF') {
+                    var trueBtn = document.getElementById('q' + index + '-true');
+                    var falseBtn = document.getElementById('q' + index + '-false');
+                    
+                    if (q.a === true) trueBtn.classList.add('correct');
+                    else falseBtn.classList.add('correct');
+
+                    if (userAns !== undefined && userAns !== q.a) {
+                        document.getElementById('q' + index + '-' + userAns).classList.add('wrong');
+                    }
+                } else {
+                    var correctBtn = document.getElementById('q' + index + '-opt' + q.a);
+                    correctBtn.classList.add('correct');
+
+                    if (userAns !== undefined && userAns !== q.a) {
+                        document.getElementById('q' + index + '-opt' + userAns).classList.add('wrong');
+                    }
+                }
+            }
+            this.showResult(score);
+        };
+
+        QuizManager.prototype.showResult = function(score) {
+            this.hideAllScreens();
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            
+            var comment = "";
+            if (score >= 90) comment = "卓越！您已經完全掌握了估測要領！";
+            else if (score >= 70) comment = "優秀！繼續練習，您一定能通過考核！";
+            else if (score >= 60) comment = "及格邊緣，建議再多看幾次題庫喔。";
+            else comment = "再接再厲！童軍講求實事求是，多練習就會進步。";
+            
+            document.getElementById('score-comment').innerText = comment;
+            window.scrollTo(0, 0);
+        };
+
+        /* 查看解答功能 */
+        QuizManager.prototype.reviewQuiz = function() {
+            this.hideAllScreens();
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            // 隱藏提交按鈕，顯示返回按鈕
+            document.getElementById('btn-submit-quiz').classList.add('hidden');
+            document.getElementById('btn-back-result').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        };
+
+        /* 返回成績板功能 */
+        QuizManager.prototype.backToResult = function() {
+            this.hideAllScreens();
+            document.getElementById('result-screen').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        };
+
+        window.quizManager = new QuizManager();
     </script>
 </body>
 </html>
