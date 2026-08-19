@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>童軍永備尺與估測測驗系統 (本地記憶版)</title>
+    <title>童軍永備尺與估測測驗系統 (雙單位自由切換版)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -38,17 +38,30 @@
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; font-size: 14px; }
         .info-item { background: #fff; padding: 5px 10px; border-radius: 4px; border: 1px solid #cce5ff; display: flex; justify-content: space-between; }
         .info-item span { font-weight: bold; color: #0056b3; }
+        
+        /* 單位切換按鈕特效 */
+        .toggle-unit-container { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #9bc4e2; }
+        .toggle-label { cursor: pointer; display: inline-flex; align-items: center; font-weight: bold; color: #d35400; font-size: 15px; }
+        .toggle-label input { width: auto; margin-right: 8px; transform: scale(1.3); cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>⛺ 童軍永備尺與估測測驗 (實境抽籤版)</h1>
+    <h1>⛺ 童軍永備尺與估測測驗 (雙單位實境版)</h1>
     
     <div class="info-panel" id="current-measures">
         <strong>🔍 你的專屬永備尺 (單位：公分 cm)</strong> 
         <div class="info-grid" id="info-grid">
             <div class="info-item">尚未設定資料</div>
+        </div>
+        
+        <!-- 新增：公尺/公分 單位切換開關 -->
+        <div class="toggle-unit-container">
+            <label class="toggle-label">
+                <input type="checkbox" id="unit-toggle" onchange="toggleUnit()">
+                ⚙️ 測驗作答啟用「公尺 (m)」單位換算 (預設為公分 cm)
+            </label>
         </div>
     </div>
 
@@ -104,7 +117,7 @@
         <div id="area-q-container" style="display:none;">
             <div class="question-box" id="area-question"></div>
             <div class="form-group">
-                <label>請計算面積為幾「平方公尺」(m²)？ (請四捨五入到小數點後第一位)</label>
+                <label id="lbl-area">請計算面積為幾「平方公分」(cm²)？ (請四捨五入到小數點後第一位)</label>
                 <input type="number" id="area-answer" step="0.1">
             </div>
             <button onclick="checkAreaAnswer()">送出答案</button>
@@ -120,8 +133,8 @@
         <div id="vol-q-container" style="display:none;">
             <div class="question-box" id="vol-question"></div>
             <div class="form-group">
-                <label>請計算體(容)積為幾「立方公尺」(m³)？ (請四捨五入到小數點後第三位)</label>
-                <input type="number" id="vol-answer" step="0.001">
+                <label id="lbl-vol">請計算體(容)積為幾「立方公分」(cm³)？ (請四捨五入到小數點後第一位)</label>
+                <input type="number" id="vol-answer" step="0.1">
             </div>
             <button onclick="checkVolAnswer()">送出答案</button>
             <div id="vol-msg" class="result"></div>
@@ -131,13 +144,13 @@
     <!-- 4. 高度估測測驗 -->
     <div id="height-test" class="content">
         <h2>🌲 高度測驗：關主抽籤</h2>
-        <p>此測驗將強制使用您的<b>「自選項目 1」</b>作為眼睛高度（或基準高度）。</p>
+        <p>此測驗將強制使用您的<b>「自選項目 1」</b>作為基準高度。</p>
         <button class="action-btn" onclick="generateHeightQuestion()">🎲 抽出測量物件</button>
         
         <div id="height-q-container" style="display:none;">
             <div class="question-box" id="height-question"></div>
             <div class="form-group">
-                <label>目標物高度是幾「公尺」(m)？ (請四捨五入到小數點後第一位)</label>
+                <label id="lbl-height">目標物高度是幾「公分」(cm)？ (請四捨五入到小數點後第一位)</label>
                 <input type="number" id="height-answer" step="0.1">
             </div>
             <button onclick="checkHeightAnswer()">送出答案</button>
@@ -170,18 +183,20 @@
     const heightObjects = ["升旗台旗桿", "營區大樹", "路燈", "籃球架", "營本部建築"];
 
     let currentAreaAns = 0; let currentVolAns = 0; let currentHeightAns = 0; let currentHeightMethod = ""; let currentToolData = {};
+    
+    // 全域變數：紀錄目前作答單位是否切換為公尺
+    let useMeterForTest = false;
 
     // 網頁載入時自動讀取 localStorage
     window.onload = function() {
         let savedMeasures = localStorage.getItem('scoutMeasures');
         let savedNames = localStorage.getItem('scoutMeasureNames');
+        let savedUnit = localStorage.getItem('scoutUseMeter');
         
         if (savedMeasures) {
             measures = JSON.parse(savedMeasures);
             for (let key in measures) {
-                if (measures[key] > 0) {
-                    document.getElementById('m_' + key).value = measures[key];
-                }
+                if (measures[key] > 0) document.getElementById('m_' + key).value = measures[key];
             }
         }
         
@@ -191,12 +206,24 @@
             if(measureNames.custom2 !== "自選2") document.getElementById('name_custom2').value = measureNames.custom2;
         }
         
-        // 只要有讀到任何大於0的資料，就更新面板
-        let hasAnyData = Object.values(measures).some(val => val > 0);
-        if(hasAnyData) {
-            updateInfoPanel();
+        if (savedUnit === "true") {
+            useMeterForTest = true;
+            document.getElementById('unit-toggle').checked = true;
         }
+        
+        let hasAnyData = Object.values(measures).some(val => val > 0);
+        if(hasAnyData) updateInfoPanel();
     };
+
+    function toggleUnit() {
+        useMeterForTest = document.getElementById('unit-toggle').checked;
+        localStorage.setItem('scoutUseMeter', useMeterForTest);
+        
+        // 切換單位時，如果剛好有測驗正在進行，就自動幫他換算新題目，避免單位錯亂
+        if (document.getElementById('area-q-container').style.display === "block") generateAreaQuestion();
+        if (document.getElementById('vol-q-container').style.display === "block") generateVolumeQuestion();
+        if (document.getElementById('height-q-container').style.display === "block") generateHeightQuestion();
+    }
 
     function switchTab(evt, tabName) {
         let content = document.getElementsByClassName("content");
@@ -224,13 +251,12 @@
 
         if(!hasData) return alert("請至少輸入一項資料！");
         
-        // 將資料存入瀏覽器的 localStorage
         localStorage.setItem('scoutMeasures', JSON.stringify(measures));
         localStorage.setItem('scoutMeasureNames', JSON.stringify(measureNames));
         
         updateInfoPanel();
         let msg = document.getElementById('calib-msg');
-        msg.innerText = "✅ 儲存成功！資料已暫存於瀏覽器中 (單位：公分 cm)。";
+        msg.innerText = "✅ 儲存成功！資料已暫存於瀏覽器中。";
         msg.style.display = "block";
         msg.className = "result success";
     }
@@ -247,7 +273,6 @@
     function getBestTool(preferredTools) {
         let available = preferredTools.filter(t => measures[t] > 0);
         if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
-        
         let anyAvailable = Object.keys(measures).filter(k => measures[k] > 0 && !['height', 'custom1', 'custom2'].includes(k));
         if (anyAvailable.length > 0) return anyAvailable[Math.floor(Math.random() * anyAvailable.length)];
         return null;
@@ -260,9 +285,13 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫手跨長或步長)");
         
         let toolName = measureNames[toolKey];
-        let toolValM = measures[toolKey] / 100;
+        // 動態依據單位開關取值
+        let toolVal = useMeterForTest ? (measures[toolKey] / 100) : measures[toolKey];
+        let unitText = useMeterForTest ? "m" : "cm";
+        let unitSqText = useMeterForTest ? "平方公尺 (m²)" : "平方公分 (cm²)";
         
-        let maxMulti = toolValM < 0.5 ? 15 : (toolValM < 1 ? 10 : 6);
+        // 為了出題合理性，如果用公分，需要的倍數可以稍大一點
+        let maxMulti = (toolVal < 0.5 && useMeterForTest) ? 15 : 10;
         let lCount = Math.floor(Math.random() * maxMulti) + 3;
         let wCount = Math.floor(Math.random() * maxMulti) + 2;
 
@@ -272,9 +301,12 @@
             實測結果：長邊共 <b>${lCount} 個 ${toolName}</b>，寬邊共 <b>${wCount} 個 ${toolName}</b>。
         `;
         
-        let actualArea = (lCount * toolValM) * (wCount * toolValM);
+        // 更新作答單位標籤
+        document.getElementById('lbl-area').innerText = `請計算面積為幾「${unitSqText}」？ (請四捨五入到小數點後第一位)`;
+        
+        let actualArea = (lCount * toolVal) * (wCount * toolVal);
         currentAreaAns = Math.round(actualArea * 10) / 10; 
-        currentToolData = {name: toolName, valM: toolValM, l: lCount, w: wCount};
+        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount, unit: unitText, unitSq: unitSqText};
         
         document.getElementById('area-q-container').style.display = "block";
         document.getElementById('area-msg').style.display = "none";
@@ -287,11 +319,14 @@
         msg.style.display = "block";
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
         
-        if(Math.abs(userAns - currentAreaAns) <= 0.2) {
-            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentAreaAns}</b> m²。`;
+        // 容錯值：公尺容錯0.2m²，公分容錯2000cm²
+        let tolerance = useMeterForTest ? 0.2 : 2000;
+        
+        if(Math.abs(userAns - currentAreaAns) <= tolerance) {
+            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentAreaAns}</b> ${currentToolData.unitSq.split(' ')[1]}。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(${currentToolData.l} × ${currentToolData.valM}m) × (${currentToolData.w} × ${currentToolData.valM}m)`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> ${currentToolData.unitSq.split(' ')[1]}。<br>算法：(${currentToolData.l} × ${currentToolData.val}${currentToolData.unit}) × (${currentToolData.w} × ${currentToolData.val}${currentToolData.unit})`;
             msg.className = "result error";
         }
     }
@@ -303,9 +338,11 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫拳頭長或手跨長)");
         
         let toolName = measureNames[toolKey];
-        let toolValM = measures[toolKey] / 100;
+        let toolVal = useMeterForTest ? (measures[toolKey] / 100) : measures[toolKey];
+        let unitText = useMeterForTest ? "m" : "cm";
+        let unitCbText = useMeterForTest ? "立方公尺 (m³)" : "立方公分 (cm³)";
         
-        let maxMulti = toolValM < 0.2 ? 10 : 5;
+        let maxMulti = (toolVal < 0.2 && useMeterForTest) ? 10 : 5;
         let lCount = Math.floor(Math.random() * maxMulti) + 2;
         let wCount = Math.floor(Math.random() * maxMulti) + 2;
         let hCount = Math.floor(Math.random() * maxMulti) + 2;
@@ -316,9 +353,14 @@
             實測結果：長度 <b>${lCount} 個</b>，寬度 <b>${wCount} 個</b>，深度/高度 <b>${hCount} 個</b>。
         `;
         
-        let actualVol = (lCount * toolValM) * (wCount * toolValM) * (hCount * toolValM);
-        currentVolAns = Math.round(actualVol * 1000) / 1000; 
-        currentToolData = {name: toolName, valM: toolValM, l: lCount, w: wCount, h: hCount};
+        // 更新作答單位標籤
+        let roundText = useMeterForTest ? "第三位" : "第一位";
+        document.getElementById('lbl-vol').innerText = `請計算體(容)積為幾「${unitCbText}」？ (請四捨五入到小數點後${roundText})`;
+        
+        let actualVol = (lCount * toolVal) * (wCount * toolVal) * (hCount * toolVal);
+        currentVolAns = useMeterForTest ? (Math.round(actualVol * 1000) / 1000) : (Math.round(actualVol * 10) / 10);
+        
+        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount, h: hCount, unit: unitText, unitCb: unitCbText};
 
         document.getElementById('vol-q-container').style.display = "block";
         document.getElementById('vol-msg').style.display = "none";
@@ -331,11 +373,14 @@
         msg.style.display = "block";
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
         
-        if(Math.abs(userAns - currentVolAns) <= 0.005) {
-            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentVolAns}</b> m³。`;
+        // 容錯值：公尺容錯0.005m³，公分容錯5000cm³
+        let tolerance = useMeterForTest ? 0.005 : 5000;
+        
+        if(Math.abs(userAns - currentVolAns) <= tolerance) {
+            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentVolAns}</b> ${currentToolData.unitCb.split(' ')[1]}。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：將長寬高的數量各自乘上 ${currentToolData.valM}m 後相乘。`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> ${currentToolData.unitCb.split(' ')[1]}。<br>算法：將長寬高的數量各自乘上 ${currentToolData.val}${currentToolData.unit} 後相乘。`;
             msg.className = "result error";
         }
     }
@@ -347,8 +392,11 @@
         }
         
         let custom1Name = measureNames.custom1; 
-        let paceM = measures.pace / 100;
-        let custom1M = measures.custom1 / 100;
+        
+        let paceVal = useMeterForTest ? (measures.pace / 100) : measures.pace;
+        let custom1Val = useMeterForTest ? (measures.custom1 / 100) : measures.custom1;
+        let unitText = useMeterForTest ? "m" : "cm";
+        let unitNmText = useMeterForTest ? "公尺 (m)" : "公分 (cm)";
 
         let objName = heightObjects[Math.floor(Math.random() * heightObjects.length)];
         currentHeightMethod = Math.random() > 0.5 ? '45deg' : 'water';
@@ -358,18 +406,23 @@
         if (currentHeightMethod === '45deg') {
             let paces = Math.floor(Math.random() * 20) + 5;
             qText += `考官要求使用【等腰直角三角形法 (45度仰角)】。<br>你從目標底部往後退，直到剛好以45度角看到頂端。你退了 <b>${paces} 步 (步長)</b>。`;
-            actualHeight = (paces * paceM) + custom1M;
+            actualHeight = (paces * paceVal) + custom1Val;
         } else {
             let pacesToTree = Math.floor(Math.random() * 15) + 8; 
             let pacesToWater = Math.floor(Math.random() * 3) + 1;  
             qText += `考官要求使用【相似三角形法 (水盆倒影)】。<br>水盆距離目標底部 <b>${pacesToTree} 步 (步長)</b>，而你距離水盆 <b>${pacesToWater} 步 (步長)</b> 時能看到頂端倒影。`;
             let ratio = pacesToTree / pacesToWater;
-            actualHeight = custom1M * ratio;
+            actualHeight = custom1Val * ratio;
         }
 
         qText += `<br><br><span style="color:#2c5e1a; font-size:14px;">💡 提示：記得加上/乘上你的「${custom1Name}」高度哦！</span>`;
+        
+        // 更新作答單位標籤
+        document.getElementById('lbl-height').innerText = `目標物高度是幾「${unitNmText}」？ (請四捨五入到小數點後第一位)`;
 
         currentHeightAns = Math.round(actualHeight * 10) / 10; 
+        currentToolData = {pace: paceVal, c1: custom1Val, unit: unitText, unitNm: unitNmText};
+        
         document.getElementById('height-question').innerHTML = qText;
         document.getElementById('height-q-container').style.display = "block";
         document.getElementById('height-msg').style.display = "none";
@@ -380,20 +433,22 @@
         let userAns = parseFloat(document.getElementById('height-answer').value);
         let msg = document.getElementById('height-msg');
         let custom1Name = measureNames.custom1;
-        let paceM = measures.pace / 100;
-        let custom1M = measures.custom1 / 100;
         
         msg.style.display = "block";
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
         
-        if(Math.abs(userAns - currentHeightAns) <= 0.2) {
-            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentHeightAns}</b> m。`;
+        // 容錯值：公尺容錯0.2m，公分容錯20cm
+        let tolerance = useMeterForTest ? 0.2 : 20;
+        let symbol = currentToolData.unitNm.split(' ')[1].replace(/[()]/g, '');
+        
+        if(Math.abs(userAns - currentHeightAns) <= tolerance) {
+            msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentHeightAns}</b> ${symbol}。`;
             msg.className = "result success";
         } else {
             let hint = currentHeightMethod === '45deg' 
-                ? `算法：(退後步數 × 步長 ${paceM}m) + ${custom1Name} ${custom1M}m`
-                : `算法：(水盆到目標步數 ÷ 人到水盆步數) × ${custom1Name} ${custom1M}m`;
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentHeightAns}</b> m。<br>${hint}`;
+                ? `算法：(退後步數 × 步長 ${currentToolData.pace}${currentToolData.unit}) + ${custom1Name} ${currentToolData.c1}${currentToolData.unit}`
+                : `算法：(水盆到目標步數 ÷ 人到水盆步數) × ${custom1Name} ${currentToolData.c1}${currentToolData.unit}`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentHeightAns}</b> ${symbol}。<br>${hint}`;
             msg.className = "result error";
         }
     }
