@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>童軍永備尺與估測測驗系統 (自訂名稱+公分顯示版)</title>
+    <title>童軍永備尺與估測測驗系統 (本地記憶版)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -62,7 +62,7 @@
     <!-- 1. 永備尺校準 -->
     <div id="calibration" class="content active">
         <h2>📏 建立你的專屬永備尺</h2>
-        <p>請輸入測量數值（單位：<b>公分 cm</b>）。為求抽籤測驗順利進行，建議至少填寫<b>手跨長、兩手長、步長、自選1(建議設為眼高)</b>。</p>
+        <p>請輸入測量數值（單位：<b>公分 cm</b>）。資料會自動暫存於您的瀏覽器中。建議至少填寫<b>手跨長、兩手長、步長、自選1(建議設為眼高)</b>。</p>
         
         <div class="form-grid">
             <div class="form-group"><label>1. 身高</label><input type="number" id="m_height" placeholder="cm"></div>
@@ -99,7 +99,6 @@
     <!-- 2. 面積估測測驗 -->
     <div id="area-test" class="content">
         <h2>🏕️ 面積測驗：關主抽籤</h2>
-        <p>模擬抽籤決定現場測量物件，考驗你對永備尺的靈活運用。</p>
         <button class="action-btn" onclick="generateAreaQuestion()">🎲 抽出測量物件</button>
         
         <div id="area-q-container" style="display:none;">
@@ -149,7 +148,6 @@
 </div>
 
 <script>
-    // 資料結構：儲存最原始的「公分」數值
     let measures = { height: 0, upReach: 0, arm: 0, armSpan: 0, handSpan: 0, fist: 0, indexFinger: 0, foot: 0, pace: 0, runPace: 0, custom1: 0, custom2: 0 };
     let measureNames = { height: "身高", upReach: "一手高舉長", arm: "手長", armSpan: "兩手長", handSpan: "手跨長", fist: "拳頭長", indexFinger: "食指首節長", foot: "腳長", pace: "步長", runPace: "跑步長", custom1: "自選1", custom2: "自選2" };
 
@@ -173,6 +171,33 @@
 
     let currentAreaAns = 0; let currentVolAns = 0; let currentHeightAns = 0; let currentHeightMethod = ""; let currentToolData = {};
 
+    // 網頁載入時自動讀取 localStorage
+    window.onload = function() {
+        let savedMeasures = localStorage.getItem('scoutMeasures');
+        let savedNames = localStorage.getItem('scoutMeasureNames');
+        
+        if (savedMeasures) {
+            measures = JSON.parse(savedMeasures);
+            for (let key in measures) {
+                if (measures[key] > 0) {
+                    document.getElementById('m_' + key).value = measures[key];
+                }
+            }
+        }
+        
+        if (savedNames) {
+            measureNames = JSON.parse(savedNames);
+            if(measureNames.custom1 !== "自選1") document.getElementById('name_custom1').value = measureNames.custom1;
+            if(measureNames.custom2 !== "自選2") document.getElementById('name_custom2').value = measureNames.custom2;
+        }
+        
+        // 只要有讀到任何大於0的資料，就更新面板
+        let hasAnyData = Object.values(measures).some(val => val > 0);
+        if(hasAnyData) {
+            updateInfoPanel();
+        }
+    };
+
     function switchTab(evt, tabName) {
         let content = document.getElementsByClassName("content");
         for (let i = 0; i < content.length; i++) content[i].classList.remove("active");
@@ -185,14 +210,12 @@
     function saveMeasures() {
         let hasData = false;
         
-        // 擷取所有數值 (維持公分紀錄)
         for (let key in measures) {
             let val = parseFloat(document.getElementById('m_' + key).value);
             measures[key] = isNaN(val) ? 0 : val;
             if(val > 0) hasData = true;
         }
         
-        // 擷取自訂名稱
         let c1Name = document.getElementById('name_custom1').value.trim();
         measureNames.custom1 = c1Name !== "" ? c1Name : "自選1";
         
@@ -201,9 +224,13 @@
 
         if(!hasData) return alert("請至少輸入一項資料！");
         
+        // 將資料存入瀏覽器的 localStorage
+        localStorage.setItem('scoutMeasures', JSON.stringify(measures));
+        localStorage.setItem('scoutMeasureNames', JSON.stringify(measureNames));
+        
         updateInfoPanel();
         let msg = document.getElementById('calib-msg');
-        msg.innerText = "✅ 儲存成功！資料已紀錄 (單位：公分 cm)。請至後方頁籤進行抽籤。";
+        msg.innerText = "✅ 儲存成功！資料已暫存於瀏覽器中 (單位：公分 cm)。";
         msg.style.display = "block";
         msg.className = "result success";
     }
@@ -233,8 +260,7 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫手跨長或步長)");
         
         let toolName = measureNames[toolKey];
-        let toolValCm = measures[toolKey]; // 公分
-        let toolValM = toolValCm / 100;    // 轉換為公尺計算
+        let toolValM = measures[toolKey] / 100;
         
         let maxMulti = toolValM < 0.5 ? 15 : (toolValM < 1 ? 10 : 6);
         let lCount = Math.floor(Math.random() * maxMulti) + 3;
@@ -277,8 +303,7 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫拳頭長或手跨長)");
         
         let toolName = measureNames[toolKey];
-        let toolValCm = measures[toolKey]; // 公分
-        let toolValM = toolValCm / 100;    // 轉換為公尺計算
+        let toolValM = measures[toolKey] / 100;
         
         let maxMulti = toolValM < 0.2 ? 10 : 5;
         let lCount = Math.floor(Math.random() * maxMulti) + 2;
@@ -322,8 +347,8 @@
         }
         
         let custom1Name = measureNames.custom1; 
-        let paceM = measures.pace / 100;        // 轉換為公尺計算
-        let custom1M = measures.custom1 / 100;  // 轉換為公尺計算
+        let paceM = measures.pace / 100;
+        let custom1M = measures.custom1 / 100;
 
         let objName = heightObjects[Math.floor(Math.random() * heightObjects.length)];
         currentHeightMethod = Math.random() > 0.5 ? '45deg' : 'water';
