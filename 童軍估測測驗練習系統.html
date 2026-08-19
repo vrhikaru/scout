@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>童軍永備尺與估測測驗系統 (自訂名稱版)</title>
+    <title>童軍永備尺與估測測驗系統 (自訂名稱+公分顯示版)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -46,7 +46,7 @@
     <h1>⛺ 童軍永備尺與估測測驗 (實境抽籤版)</h1>
     
     <div class="info-panel" id="current-measures">
-        <strong>🔍 你的專屬永備尺 (系統自動換算為公尺 m)</strong> 
+        <strong>🔍 你的專屬永備尺 (單位：公分 cm)</strong> 
         <div class="info-grid" id="info-grid">
             <div class="info-item">尚未設定資料</div>
         </div>
@@ -76,7 +76,6 @@
             <div class="form-group"><label>9. 步長</label><input type="number" id="m_pace" placeholder="cm"></div>
             <div class="form-group"><label>10. 跑步長</label><input type="number" id="m_runPace" placeholder="cm"></div>
             
-            <!-- 自選項目更新：加入名稱輸入 -->
             <div class="form-group" style="background:#e8f4e5;">
                 <label>11. 自選項目 1</label>
                 <div class="input-group">
@@ -150,6 +149,7 @@
 </div>
 
 <script>
+    // 資料結構：儲存最原始的「公分」數值
     let measures = { height: 0, upReach: 0, arm: 0, armSpan: 0, handSpan: 0, fist: 0, indexFinger: 0, foot: 0, pace: 0, runPace: 0, custom1: 0, custom2: 0 };
     let measureNames = { height: "身高", upReach: "一手高舉長", arm: "手長", armSpan: "兩手長", handSpan: "手跨長", fist: "拳頭長", indexFinger: "食指首節長", foot: "腳長", pace: "步長", runPace: "跑步長", custom1: "自選1", custom2: "自選2" };
 
@@ -185,10 +185,10 @@
     function saveMeasures() {
         let hasData = false;
         
-        // 擷取所有數值
+        // 擷取所有數值 (維持公分紀錄)
         for (let key in measures) {
             let val = parseFloat(document.getElementById('m_' + key).value);
-            measures[key] = (isNaN(val) ? 0 : val) / 100;
+            measures[key] = isNaN(val) ? 0 : val;
             if(val > 0) hasData = true;
         }
         
@@ -203,7 +203,7 @@
         
         updateInfoPanel();
         let msg = document.getElementById('calib-msg');
-        msg.innerText = "✅ 儲存成功！資料已鎖定並轉為公尺(m)。請至後方頁籤進行抽籤。";
+        msg.innerText = "✅ 儲存成功！資料已紀錄 (單位：公分 cm)。請至後方頁籤進行抽籤。";
         msg.style.display = "block";
         msg.className = "result success";
     }
@@ -211,7 +211,7 @@
     function updateInfoPanel() {
         let html = '';
         for (let key in measures) {
-            let displayVal = measures[key] > 0 ? measures[key].toFixed(3) : '-';
+            let displayVal = measures[key] > 0 ? measures[key] + ' cm' : '-';
             html += `<div class="info-item"><b>${measureNames[key]}</b> <span>${displayVal}</span></div>`;
         }
         document.getElementById('info-grid').innerHTML = html;
@@ -233,9 +233,10 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫手跨長或步長)");
         
         let toolName = measureNames[toolKey];
-        let toolVal = measures[toolKey];
+        let toolValCm = measures[toolKey]; // 公分
+        let toolValM = toolValCm / 100;    // 轉換為公尺計算
         
-        let maxMulti = toolVal < 0.5 ? 15 : (toolVal < 1 ? 10 : 6);
+        let maxMulti = toolValM < 0.5 ? 15 : (toolValM < 1 ? 10 : 6);
         let lCount = Math.floor(Math.random() * maxMulti) + 3;
         let wCount = Math.floor(Math.random() * maxMulti) + 2;
 
@@ -245,9 +246,9 @@
             實測結果：長邊共 <b>${lCount} 個 ${toolName}</b>，寬邊共 <b>${wCount} 個 ${toolName}</b>。
         `;
         
-        let actualArea = (lCount * toolVal) * (wCount * toolVal);
+        let actualArea = (lCount * toolValM) * (wCount * toolValM);
         currentAreaAns = Math.round(actualArea * 10) / 10; 
-        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount};
+        currentToolData = {name: toolName, valM: toolValM, l: lCount, w: wCount};
         
         document.getElementById('area-q-container').style.display = "block";
         document.getElementById('area-msg').style.display = "none";
@@ -264,7 +265,7 @@
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentAreaAns}</b> m²。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(${currentToolData.l} × ${currentToolData.val}m) × (${currentToolData.w} × ${currentToolData.val}m)`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentAreaAns}</b> m²。<br>算法：(${currentToolData.l} × ${currentToolData.valM}m) × (${currentToolData.w} × ${currentToolData.valM}m)`;
             msg.className = "result error";
         }
     }
@@ -276,9 +277,10 @@
         if(!toolKey) return alert("請先至第一頁填寫你的永備尺資料！(建議填寫拳頭長或手跨長)");
         
         let toolName = measureNames[toolKey];
-        let toolVal = measures[toolKey];
+        let toolValCm = measures[toolKey]; // 公分
+        let toolValM = toolValCm / 100;    // 轉換為公尺計算
         
-        let maxMulti = toolVal < 0.2 ? 10 : 5;
+        let maxMulti = toolValM < 0.2 ? 10 : 5;
         let lCount = Math.floor(Math.random() * maxMulti) + 2;
         let wCount = Math.floor(Math.random() * maxMulti) + 2;
         let hCount = Math.floor(Math.random() * maxMulti) + 2;
@@ -289,9 +291,9 @@
             實測結果：長度 <b>${lCount} 個</b>，寬度 <b>${wCount} 個</b>，深度/高度 <b>${hCount} 個</b>。
         `;
         
-        let actualVol = (lCount * toolVal) * (wCount * toolVal) * (hCount * toolVal);
+        let actualVol = (lCount * toolValM) * (wCount * toolValM) * (hCount * toolValM);
         currentVolAns = Math.round(actualVol * 1000) / 1000; 
-        currentToolData = {name: toolName, val: toolVal, l: lCount, w: wCount, h: hCount};
+        currentToolData = {name: toolName, valM: toolValM, l: lCount, w: wCount, h: hCount};
 
         document.getElementById('vol-q-container').style.display = "block";
         document.getElementById('vol-msg').style.display = "none";
@@ -308,7 +310,7 @@
             msg.innerHTML = `✅ 答對了！標準答案是 <b>${currentVolAns}</b> m³。`;
             msg.className = "result success";
         } else {
-            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：將長寬高的數量各自乘上 ${currentToolData.val}m 後相乘。`;
+            msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentVolAns}</b> m³。<br>算法：將長寬高的數量各自乘上 ${currentToolData.valM}m 後相乘。`;
             msg.className = "result error";
         }
     }
@@ -319,7 +321,10 @@
             return alert("高度測驗必須有「步長」與「自選項目 1 (作為高度基準)」，請回第一頁補充！");
         }
         
-        let custom1Name = measureNames.custom1; // 動態抓取使用者自訂名稱
+        let custom1Name = measureNames.custom1; 
+        let paceM = measures.pace / 100;        // 轉換為公尺計算
+        let custom1M = measures.custom1 / 100;  // 轉換為公尺計算
+
         let objName = heightObjects[Math.floor(Math.random() * heightObjects.length)];
         currentHeightMethod = Math.random() > 0.5 ? '45deg' : 'water';
         let qText = `<h3 class="draw-title">🎲 測量物件：【${objName}】</h3>`;
@@ -328,13 +333,13 @@
         if (currentHeightMethod === '45deg') {
             let paces = Math.floor(Math.random() * 20) + 5;
             qText += `考官要求使用【等腰直角三角形法 (45度仰角)】。<br>你從目標底部往後退，直到剛好以45度角看到頂端。你退了 <b>${paces} 步 (步長)</b>。`;
-            actualHeight = (paces * measures.pace) + measures.custom1;
+            actualHeight = (paces * paceM) + custom1M;
         } else {
             let pacesToTree = Math.floor(Math.random() * 15) + 8; 
             let pacesToWater = Math.floor(Math.random() * 3) + 1;  
             qText += `考官要求使用【相似三角形法 (水盆倒影)】。<br>水盆距離目標底部 <b>${pacesToTree} 步 (步長)</b>，而你距離水盆 <b>${pacesToWater} 步 (步長)</b> 時能看到頂端倒影。`;
             let ratio = pacesToTree / pacesToWater;
-            actualHeight = measures.custom1 * ratio;
+            actualHeight = custom1M * ratio;
         }
 
         qText += `<br><br><span style="color:#2c5e1a; font-size:14px;">💡 提示：記得加上/乘上你的「${custom1Name}」高度哦！</span>`;
@@ -350,6 +355,9 @@
         let userAns = parseFloat(document.getElementById('height-answer').value);
         let msg = document.getElementById('height-msg');
         let custom1Name = measureNames.custom1;
+        let paceM = measures.pace / 100;
+        let custom1M = measures.custom1 / 100;
+        
         msg.style.display = "block";
         if(isNaN(userAns)) return msg.className = "result error", msg.innerText = "請輸入數字！";
         
@@ -358,8 +366,8 @@
             msg.className = "result success";
         } else {
             let hint = currentHeightMethod === '45deg' 
-                ? `算法：(退後步數 × 步長 ${measures.pace}m) + ${custom1Name} ${measures.custom1}m`
-                : `算法：(水盆到目標步數 ÷ 人到水盆步數) × ${custom1Name} ${measures.custom1}m`;
+                ? `算法：(退後步數 × 步長 ${paceM}m) + ${custom1Name} ${custom1M}m`
+                : `算法：(水盆到目標步數 ÷ 人到水盆步數) × ${custom1Name} ${custom1M}m`;
             msg.innerHTML = `❌ 算錯囉！標準答案是 <b>${currentHeightAns}</b> m。<br>${hint}`;
             msg.className = "result error";
         }
